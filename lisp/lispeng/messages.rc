@@ -1,0 +1,75 @@
+STRINGTABLE
+BEGIN
+    IDS_E_ObjectCannotStart "an object cannot start with ~S"
+    IDS_E_FileClosed        "File ~S if closed"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_E_DivideByZero      "divide by zero"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_E_FunctionUndefined "function undefined ~S"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_E_IsNot             "~S is not a ~S"
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_E_ParseError        "Parse error"
+    IDS_E_ImportConflict    "Importing ~S into ~S produces a name conflict with ~S and other symbols."
+    IDS_E_UninterNameConflict 
+                            "Uninterning ~S from ~S uncovers a name conflict.\nYou may choose the symbol in favour of which to resolve the conflict."
+    IDS_E_ImportBeforeExport 
+                            "~S: Symbol ~S should be imported into ~S before being exported."
+    IDS_E_ExportConflict    "Exporting ~S from ~S produces a name conflict with ~S from ~S.\nYou may choose which symbol should be accessible in ~S."
+    IDS_E_NoPackageWithName "there is no package with name ~S"
+    IDS_E_NoExternalSymbol  "~S has no external symbol with name ~S"
+    IDS_E_NoSuchBlock       "no block named ~A is currently visible"
+    IDS_E_NoSuchThrow       "there is no CATCH for tag ~S"
+    IDS_E_BlockHasLeft      "the block named ~S has already been left"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ROOM                "Number of GC:  ~S~%Bytes freed by GC:  ~S~%Time spent in GC: ~S~%Bytes permanently allocated:   ~S~%Bytes currently in use:   ~S~%Bytes available until next GC: ~S~%"
+    IDS_USE_PACKAGE_NAME_CONFLICT 
+                            "~S name conflicts remain\nWhich symbol with name ~S should be accessible in ~S?"""
+    IDS_IMPORT_AND_UNINTERN "import it and unintern the other symbol"
+    IDS_IMPORT_AND_UNINTERN_AND_SHADOW 
+                            "import it, unintern one other symbol and shadow the other symbols"
+    IDS_IMPORT_AND_SHADOW   "import it and shadow the other symbol"
+    IDS_DO_NOTHING          "do nothing"
+    IDS_SYM_FROM_PACK_WILL_SHADOW 
+                            "symbol ~A from ~A will become a shadowing symbol"
+    IDS_IMPORT_FIRSTLY      "import the symbol first"
+    IDS_SYMBOL_TO_EXPORT    "the symbol to export, ~S"
+    IDS_OLD_SYMBOL          "the old symbol, ~S"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_E_TooFewArguments   "too few arguments given to ~A: ~S"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_E_VariableHasNoValue "variable ~S has no value"
+    IDS_E_IsNotAFunctionName "~S: ~S is not a function name"
+    IDS_E_NaN               "~S: Not a number result"
+    IDS_E_TooManyValues     "~S: too many values"
+    IDS_E_KeywordArgsNoPairwise 
+                            "keyword arguments in ~S should occur pairwise"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_E_NoSuchOpcode      "~S: no such opcode ~S"
+    IDS_E_SeriousCondition  "~S: unrecoverable internal error"
+END

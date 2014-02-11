@@ -1,0 +1,44 @@
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(00000055-0002-0003-0002-0044534F4654),
+	version(2.0),
+	helpstring("LispEng 2.0 Type Library")
+]
+library LispEng {
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+
+	[ uuid(55534654-3F35-46d9-0001-54BAFC251101) ]
+	interface IStandardStream : IUnknown {
+		HRESULT get([out, retval] wchar_t *pch);
+		HRESULT put(wchar_t ch);
+		[propget] HRESULT IsInteractive([out, retval] bool *pb);
+		[propget] HRESULT CanRead([out, retval] bool *pb);
+		[propget] HRESULT CanWrite([out, retval] bool *pb);
+	};
+
+	typedef enum {
+		SIG_SIGTERM = 15 // compatibel with signal.h
+	} EnumSignal;
+
+	[ uuid(55534654-3F35-46d9-0001-54BAFC251102), dual, oleautomation ]
+	interface ILisp : IDispatch {
+		[id(1)] HRESULT Init();
+		[id(2)] HRESULT Loop();
+		[id(3)] HRESULT SetStandardStream(int idx, IStandardStream *stm);
+		[id(4)] HRESULT GetSymbol(BSTR name, BSTR pack, [retval, out] void **sym);
+		[id(5)] HRESULT Call(void *sym, [in] SAFEARRAY(VARIANT) psa, [retval, out] VARIANT *r);
+		[id(6)] HRESULT Break(EnumSignal sig);
+		[id(7)] HRESULT Eval(BSTR s, [retval, out] BSTR *r);
+	};
+
+	[ uuid(55534654-3F35-46d9-0002-54BAFC251102)]
+	coclass LispObj {
+		[default] interface ILisp;
+	};
+
+};
+

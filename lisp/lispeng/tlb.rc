@@ -1,0 +1,13 @@
+#ifndef NO_TLB
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1251)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TYPELIB
+//
+
+1                       TYPELIB                 "inc/LispEng.tlb"
+#endif    // Neutral resources
+#endif

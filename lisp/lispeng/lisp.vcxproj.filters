@@ -1,0 +1,332 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{e003102c-8c9a-4b16-b57d-0f0988fec500}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="Comp">
+      <UniqueIdentifier>{58d3fcd2-0fbf-4727-909d-a1144c90bbb1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Comp\inc">
+      <UniqueIdentifier>{b5b416ef-3761-4623-a839-7655d2f3230d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{9c25bfdf-fd75-4161-aa0b-89233750b539}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{d6cdaa7a-c161-4158-af4e-311948242aa2}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="x86">
+      <UniqueIdentifier>{67863722-4e30-43b0-afec-c5ebb50897ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libext">
+      <UniqueIdentifier>{3147b873-7498-44bd-97ba-a017da92a159}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libext\H">
+      <UniqueIdentifier>{22173fc3-e0c6-4e36-b201-255a14628e7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libext\x86">
+      <UniqueIdentifier>{02cbe0af-af60-44b0-ba09-fa80e25db260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Console">
+      <UniqueIdentifier>{4c62a7c8-1c0d-4cdd-871a-7e6fa6682d98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libext\win32">
+      <UniqueIdentifier>{c7e7e198-62d1-4955-8348-1931d67b591a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LispEng.def">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\el\comp\x86x64.inc">
+      <Filter>Comp\inc</Filter>
+    </None>
+    <None Include="LispEng.tlb" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="LispEng.idl">
+      <Filter>Resource Files</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="lispeng.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Msg_Compiler Include="lispmsg.mc">
+      <Filter>Resource Files</Filter>
+    </Msg_Compiler>
+    <Msg_Compiler Include="..\..\el\libext\ext_messages.mc">
+      <Filter>Resource Files</Filter>
+    </Msg_Compiler>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\El\Comp\stdafx.cpp">
+      <Filter>Comp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\comp\BigNum386.cpp">
+      <Filter>Comp\inc</Filter>
+    </ClCompile>
+    <ClCompile Include="backquote.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clos.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Debugger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Eval.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="f_array.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Character.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Environment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_File.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Hashtable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="f_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Number.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Package.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Pathname.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Seq.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="F_Stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ffi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Functions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GarbageColl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Lisp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LispEng.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ListUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="macros.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pretty-printer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="printer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="reader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SpecialOperators.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Svalue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Vm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lisp386.cpp">
+      <Filter>x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\EL\libext\bignum.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\datetime.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-app.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-base.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-blob.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-core.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-encoding.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-file.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-fw.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-handlers.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\EL\libext\ext-os-api.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-os.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-posix.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-stream.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-string.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\threader.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\EL\libext\bignum386.cpp">
+      <Filter>libext\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\console\lisper.cpp">
+      <Filter>Console</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\elwin\static-main.cpp">
+      <Filter>Console</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\ExCom.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\ext-registry.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\ext-win.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\getopt.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\ext2.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\ext-com.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\stack-trace.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\binary-reader-writer.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\com-module.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\comp\ia32-codegen.cpp">
+      <Filter>Comp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\extwin32.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-ip-address.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-net.cpp">
+      <Filter>libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\extole.cpp">
+      <Filter>libext\win32</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include=".\file_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fundef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Lisp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lisp_itf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LispEng.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="params.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="symdef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\EL\libext\bignum386.h">
+      <Filter>libext</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\el\libext\ExCom.h">
+      <Filter>libext\H</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\EL\libext\ext-cpp.h">
+      <Filter>libext\H</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\el\libext\ext-hash.h">
+      <Filter>libext\H</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\el\libext\extstl.h">
+      <Filter>libext\H</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\el\libext\vc-warnings.h">
+      <Filter>libext\H</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\el\libext\ext-thread.h">
+      <Filter>libext\H</Filter>
+    </ClInclude>
+    <ClInclude Include="prj_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="typedef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="..\..\EL\libext\bignum-x86x64.asm">
+      <Filter>libext\x86</Filter>
+    </MASM>
+  </ItemGroup>
+</Project>

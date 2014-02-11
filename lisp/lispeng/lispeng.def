@@ -1,0 +1,31 @@
+LIBRARY
+
+EXPORTS
+
+LispCreate																@ 1
+LispClose																@ 2
+LispBreak																@ 3
+LispGetCurrent															@ 4
+LispEval																@ 5
+LispLoad																@ 6
+LispSetStandardStream													@ 8
+LispCreateObj															@ 9
+
+?GetLisp@Lisp@@YGAAVCLispEng@1@XZ										@ 100 NONAME
+?BignumFrom@CLispEng@Lisp@@QAEK_J@Z										@ 101 NONAME
+?CreateVector@CLispEng@Lisp@@QAEPAVCArrayValue@2@IE@Z					@ 102 NONAME
+?ToVector@CLispEng@Lisp@@QAEPAVCArrayValue@2@K@Z						@ 103 NONAME
+?GetElement@CArrayValue@Lisp@@QAEKI@Z									@ 104 NONAME
+?SetElement@CArrayValue@Lisp@@QAEXIK@Z									@ 105 NONAME
+?E_TypeErr@CLispEng@Lisp@@QAEXKKHKK@Z									@ 106 NONAME
+?ToPathname@Lisp@@YGPAVCPathname@1@K@Z									@ 107 NONAME
+?ToString@CPathname@Lisp@@QAE?AVString@Ext@@_N@Z						@ 108 NONAME
+?AsTrueString@CLispEng@Lisp@@QAE?AVString@Ext@@K@Z						@ 109 NONAME
+?put@StandardStream@Lisp@@UAEX_W@Z										@ 110 NONAME
+?WriteByte@OutputStream@Lisp@@UAEXE@Z									@ 111 NONAME
+?FromCInteger@CLispEng@Lisp@@QAEKABVBigInteger@Ext@@@Z					@ 112 NONAME
+?ToBigInteger@CLispEng@Lisp@@QAE?AVBigInteger@Ext@@K@Z					@ 113 NONAME
+?CreateString@CLispEng@Lisp@@QAEKABVString@Ext@@@Z						@ 114 NONAME
+?Listof@CLispEng@Lisp@@QAIKH@Z											@ 115 NONAME
+?get@StandardStream@Lisp@@UAEHXZ										@ 116 NONAME
+??0OutputStream@Lisp@@QAE@PAU_iobuf@@@Z									@ 117 NONAME
