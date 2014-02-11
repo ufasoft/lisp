@@ -1,0 +1,4 @@
+Installation Instructions
+*************************
+
+./configure && make && sudo make install

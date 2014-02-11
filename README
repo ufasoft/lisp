@@ -1,0 +1,23 @@
+Ufasoft Lisp software  http://ufasoft.com/lisp
+
+This Common Lisp implementation based on the original CLISP ( http://clisp.org ).
+Small native core rewritten on C++.
+CLISP's .lisp files used mostly unmodified.
+
+Supported Platforms:
+	Linux/Unix
+	Windows - has GUI IDE, based on Visual Studio Shell.
+	Windows CE
+
+For Linux/Unix:
+	./configure && make
+
+For Windows:
+	Open lisp-2012.sln  (VS 2012 solution file)
+
+For Windows CE:
+	Open src/lispeng/lisp.vcproj  (VS 2008 project file)
+
+
+
+
