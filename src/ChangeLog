@@ -1,0 +1,10 @@
+2011-05-05  
+
+	* OPTIMIZED: adjust-array for vector extending
+	* Support of CFFI
+
+2009-12-30  
+
+	* FIXED: Pretty-print of backquoutes
+	* FIXED: output codepage for Windows Console
+

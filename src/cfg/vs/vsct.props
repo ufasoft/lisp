@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup
+    Condition="'$(BuildVSCTBeforeTargets)' == '' and '$(BuildVSCTAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <BuildVSCTBeforeTargets>Midl</BuildVSCTBeforeTargets>
+    <BuildVSCTAfterTargets>CustomBuild</BuildVSCTAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <BuildVSCTDependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(BuildVSCTDependsOn)</BuildVSCTDependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <BuildVSCT>
+      <CommandLineTemplate>"$(VSSDK140Install)VisualStudioIntegration\Tools\Bin\vsct.exe"  -v /D_CTC_GUIDS_ /D__CTC__ -I"$(WindowsSdkDir)\Include\um" -I"$(VSSDK140Install)VisualStudioIntegration\Common\Inc" -I"$(VSSDK140Install)VisualStudioIntegration\Common\Inc\office10" -I"$(VSSDK140Install)VisualStudioIntegration\Common\Inc\AppEnvInc" %(FullPath) "$(IntDir)%(Filename).cto</CommandLineTemplate>
+      <Outputs>$(IntDir)%(Filename).cto</Outputs>
+      <ExecutionDescription>Compiling VSCT File</ExecutionDescription>
+    </BuildVSCT>
+  </ItemDefinitionGroup>
+</Project>

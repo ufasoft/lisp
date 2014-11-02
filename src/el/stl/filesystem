@@ -1,0 +1,15 @@
+#pragma once
+#define _FILESYSTEM_
+
+namespace ExtSTL {
+
+class path {
+public:
+
+private:
+	Ext::String m_s;
+};
+
+
+} // ExtSTL::
+

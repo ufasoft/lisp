@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PropertyPageSchema
+      Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml" />
+    <AvailableItemName
+      Include="BuildVSCT">
+      <Targets>_BuildVSCT</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+  <UsingTask
+    TaskName="BuildVSCT"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <Target
+    Name="_BuildVSCT"
+    BeforeTargets="$(BuildVSCTBeforeTargets)"
+    AfterTargets="$(BuildVSCTAfterTargets)"
+    Condition="'@(BuildVSCT)' != ''"
+    DependsOnTargets="$(BuildVSCTDependsOn);ComputeBuildVSCTOutput"
+    Outputs="%(BuildVSCT.Outputs)"
+    Inputs="%(BuildVSCT.Identity);%(BuildVSCT.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <BuildVSCT
+        Remove="@(BuildVSCT)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <BuildVSCT_tlog
+        Include="%(BuildVSCT.Outputs)"
+        Condition="'%(BuildVSCT.Outputs)' != '' and '%(BuildVSCT.ExcludedFromBuild)' != 'true'">
+        <Source>@(BuildVSCT, '|')</Source>
+      </BuildVSCT_tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(BuildVSCT.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(BuildVSCT_tlog)' != '' and '%(BuildVSCT_tlog.ExcludedFromBuild)' != 'true'"
+      File="$(IntDir)$(ProjectName).write.1.tlog"
+      Lines="^%(BuildVSCT_tlog.Source);@(BuildVSCT_tlog-&gt;'%(Fullpath)')" />
+    <BuildVSCT
+      Condition="'@(BuildVSCT)' != '' and '%(BuildVSCT.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(BuildVSCT.CommandLineTemplate)"
+      AdditionalOptions="%(BuildVSCT.AdditionalOptions)"
+      Inputs="%(BuildVSCT.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            ComputeBuildVSCTOutput;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            ComputeBuildVSCTOutput;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="ComputeBuildVSCTOutput"
+    Condition="'@(BuildVSCT)' != ''">
+    <ItemGroup>
+      <BuildVSCTDirsToMake
+        Condition="'@(BuildVSCT)' != '' and '%(BuildVSCT.ExcludedFromBuild)' != 'true'"
+        Include="%(BuildVSCT.Outputs)" />
+      <Link
+        Include="%(BuildVSCTDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(BuildVSCTDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(BuildVSCTDirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(BuildVSCTDirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+</Project>
