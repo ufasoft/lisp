@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -64,7 +57,7 @@ void CPackage::Connect() {
 	CP pack = lisp.FromSValue(this);
 	lisp.m_setPackage.insert(pack);
 	lisp.m_mapPackage[m_name] = pack;
-	for (int i=0; i<m_arNick.size(); i++)
+	for (size_t i=0; i<m_arNick.size(); ++i)
 		lisp.m_mapPackage[m_arNick[i]] = pack;
 }
 
@@ -72,7 +65,7 @@ void CPackage::Disconnect() {
 	CLispEng& lisp = Lisp();
 	lisp.m_setPackage.erase(lisp.FromSValue(this));
 	lisp.m_mapPackage.erase(m_name);
-	for (int i=0; i<m_arNick.size(); i++)
+	for (size_t i=0; i<m_arNick.size(); ++i)
 		lisp.m_mapPackage.erase(m_arNick[i]);
 	m_name = "";
 	m_arNick.clear();
@@ -159,13 +152,13 @@ struct CWriteCallback {
 	CLispEng *lisp;
 	BlsWriter *pwr;
 	CP m_packThis;
-	map<DWORD_PTR, byte> m_m;
+	map<uintptr_t, byte> m_m;
 
 	void operator()(const pair<CSymbolValue*, byte>& pp) {
 		byte flags = pp.second;
 		if (pp.first->HomePackage == m_packThis)
 			flags |= PACKAGE_SYM_OWNS;
-		m_m.insert(make_pair(DWORD_PTR(pwr->m_obMap.m_arP[1][pp.first - lisp->m_symbolMan.Base]), flags));
+		m_m.insert(make_pair(uintptr_t(pwr->m_obMap.m_arP[1][pp.first - lisp->m_symbolMan.Base]), flags));
 	}
 };
 
@@ -177,8 +170,8 @@ void CPackage::Write(BlsWriter& wr) {
 	CWriteCallback c = { &Lisp(), &wr, Lisp().FromSValue(this) };
 	m_mapSym.ForEachSymbolValue(c);
 
-	DWORD_PTR prev = 0;
-	for (map<DWORD_PTR, byte>::iterator i=c.m_m.begin(); i!=c.m_m.end(); ++i) {
+	uintptr_t prev = 0;
+	for (map<uintptr_t, byte>::iterator i=c.m_m.begin(); i!=c.m_m.end(); ++i) {
 		wr.WriteVal(i->second, i->first-prev);
 		prev = i->first;
 	}
@@ -191,9 +184,9 @@ void CPackage::Read(const BlsReader& rd) {
 	rd >> m_name >> m_arNick;
 	rd >> m_useList >> m_docString;
 	size_t count = rd.ReadSize();
-	DWORD_PTR prev = 0;
-	for (int i=0; i<count; i++) {
-		pair<byte, DWORD_PTR> pp = rd.ReadByteVal();
+	uintptr_t prev = 0;
+	for (size_t i=0; i<count; ++i) {
+		pair<byte, uintptr_t> pp = rd.ReadByteVal();
 		byte flags = pp.first & ~PACKAGE_SYM_OWNS;
 		prev += pp.second;
 
@@ -213,8 +206,7 @@ void CPackage::Read(const BlsReader& rd) {
 CPackage *CLispEng::FromPackageDesignator(CP p) {
 	if (p == V_U)
 		p = Spec(L_S_PACKAGE);
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_PACKAGE:
 		break;
 	case TS_CHARACTER:
@@ -433,8 +425,7 @@ void CLispEng::F_PackageUsedByList() {
 }
 
 void CLispEng::F_DeletePackage() {
-	switch (Type(SV))	
-	{
+	switch (Type(SV)) {
 	case TS_ARRAY:
 	case TS_SYMBOL:
 	case TS_CHARACTER:
@@ -675,7 +666,7 @@ void CLispEng::Export(CP sym, CP package) {
 
 	if (fr != S(L_K_INTERNAL))
 		Import(sym, package);
-	for (int i=0; i<resolvers.size(); ++i)
+	for (size_t i=0; i<resolvers.size(); ++i)
 		ShadowingImport(resolvers[i].first, resolvers[i].second);
 	AsPackage(package)->m_mapSym.find(AsSymbol(sym))->second |= PACKAGE_SYM_EXTERNAL;
 }

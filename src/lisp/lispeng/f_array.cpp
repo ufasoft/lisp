@@ -1,19 +1,11 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
 
 namespace Lisp {
 
-static void GSetElement(DWORD_PTR *pData, byte elType, ssize_t i, CP v) {
-	switch (elType)
-	{
+static void GSetElement(uintptr_t *pData, byte elType, ssize_t i, CP v) {
+	switch (elType) {
 	case ELTYPE_T:
 		pData[i] = v;
 		break;
@@ -34,13 +26,13 @@ static void GSetElement(DWORD_PTR *pData, byte elType, ssize_t i, CP v) {
 	}
 }
 
-CMultiIterator::CMultiIterator(DWORD_PTR *pData, byte elType, CP dims)
+CMultiIterator::CMultiIterator(uintptr_t *pData, byte elType, CP dims)
 	:	m_pData(pData)
 	,	m_elType(elType)
 {
 	CLispEng& lisp = Lisp();
 	m_dims = CArrayValue::GetDims(dims);
-	for (int i=0; i<m_dims.size(); i++)
+	for (size_t i=0; i<m_dims.size(); ++i)
 		m_idxs.push_back(0);
 }
 
@@ -141,14 +133,13 @@ size_t CArrayValue::CalculateRowIndex(CP *pRest, size_t nArgs) {
 	return r;
 }
 
-DWORD_PTR *CArrayValue::Alloc(size_t size) {
-	return (DWORD_PTR*)Malloc(size*sizeof(DWORD_PTR));
+uintptr_t *CArrayValue::Alloc(size_t size) {
+	return (uintptr_t*)Malloc(size * sizeof(uintptr_t));
 }
 
-void CArrayValue::Fill(DWORD_PTR *pData, byte elType, size_t beg, size_t end, CP initEl) {
+void CArrayValue::Fill(uintptr_t *pData, byte elType, size_t beg, size_t end, CP initEl) {
 	byte by = 0;
-	switch (elType)
-	{
+	switch (elType) {
 	case ELTYPE_T:
 		std::fill(pData+beg, pData+end, initEl);
 		break;
@@ -178,9 +169,9 @@ void CArrayValue::Fill(DWORD_PTR *pData, byte elType, size_t beg, size_t end, CP
 	}
 }
 
-DWORD_PTR *CArrayValue::CreateData(byte elType, CP dims, CP initEl) {
+uintptr_t *CArrayValue::CreateData(byte elType, CP dims, CP initEl) {
 	size_t totalSize = TotalSize(dims);
-	DWORD_PTR *pData = Alloc((totalSize*CArrayValue::ElementBitSize(elType)+LISP_BITS_IN_CP-1)/LISP_BITS_IN_CP);
+	uintptr_t *pData = Alloc((totalSize*CArrayValue::ElementBitSize(elType)+LISP_BITS_IN_CP-1)/LISP_BITS_IN_CP);
 	if (totalSize)
 		Fill(pData, elType, 0, totalSize, initEl);
 	return pData;
@@ -195,8 +186,7 @@ CP CArrayValue::GetElement(size_t i) {
 	}
 	if (i >= av->TotalSize())
 		Lisp().E_RangeErr(CreateFixnum((int)i), CreateFixnum((int)av->TotalSize()));
-	switch (m_elType)
-	{
+	switch (m_elType) {
 	case ELTYPE_T:
 		return av->m_pData[i];
 	case ELTYPE_BIT:
@@ -243,11 +233,10 @@ void CArrayValue::Write(BlsWriter& wr) {
 	else {
 		(BinaryWriter&)wr << m_elType;
 		size_t totalSize = TotalSize();
-		switch (m_elType)
-		{
+		switch (m_elType) {
 		case ELTYPE_T:
 			{
-				for (int i=0; i<totalSize; i++)
+				for (size_t i=0; i<totalSize; ++i)
 					wr << *(CSPtr*)(m_pData+i);
 			}
 			break;
@@ -274,11 +263,10 @@ void CArrayValue::Read(const BlsReader& rd) {
 		(BinaryReader&)rd >> m_elType;
 		m_pData = CreateData(m_elType, m_dims, 0);
 		size_t totalSize = TotalSize();
-		switch (m_elType)
-		{
+		switch (m_elType) {
 		case ELTYPE_T:
 			{
-				for (int i=0; i<totalSize; i++)
+				for (size_t i=0; i<totalSize; ++i)
 					rd >> *(CSPtr*)(m_pData+i);
 			}
 			break;
@@ -302,8 +290,7 @@ void CArrayValue::Read(const BlsReader& rd) {
 }
 
 byte CLispEng::EltypeCode(CP p) {
-	switch (p)
-	{
+	switch (p) {
 	case V_T:				return ELTYPE_T;
 	case S(L_BIT):			return ELTYPE_BIT;
 	case S(L_CHARACTER):	return ELTYPE_CHARACTER;
@@ -420,8 +407,7 @@ byte CArrayValue::GetElementType() {
 }
 
 void CLispEng::F_ArrayElementType() {
-	switch (ToArray(Pop())->GetElementType())
-	{
+	switch (ToArray(Pop())->GetElementType()) {
 	case ELTYPE_T:			m_r = V_T; break;
 	case ELTYPE_BIT:		m_r = S(L_BIT); break;
 	case ELTYPE_CHARACTER:	m_r = S(L_CHARACTER); break;
@@ -505,12 +491,11 @@ void CLispEng::BitUp(CBitOp bitOp) {
 		avr = ToArray(arg);
 		if (avr->GetElementType() != ELTYPE_BIT || !DimsEqual(avr->m_dims, av2->m_dims))
 			E_TypeErr(arg, S(L_BIT_VECTOR));
-	} for (int i=0; i<totalSize; i++) {
-		DWORD_PTR n1 = AsNumber(av1->GetElement(i)),
+	} for (size_t i=0; i<totalSize; ++i) {
+		uintptr_t n1 = AsNumber(av1->GetElement(i)),
 			n2 = AsNumber(av2->GetElement(i)),
 			n;
-		switch (bitOp)
-		{
+		switch (bitOp) {
 		case BITOP_AND:
 			n = n1 & n2;
 			break;
@@ -609,7 +594,7 @@ void CLispEng::F_BitNOT() {
 		if (avr->GetElementType() != ELTYPE_BIT || !DimsEqual(avr->m_dims, av->m_dims))
 			E_TypeErr(arg, S(L_BIT_VECTOR));
 	}
-	for (int i=0; i<totalSize; i++)
+	for (size_t i=0; i<totalSize; ++i)
 		avr->SetElement(i, !AsNumber(av->GetElement(i)));
 	m_r = FromSValue(avr);
 	SkipStack(2);
@@ -752,12 +737,12 @@ void CLispEng::F_AdjustArray() {
 	size_t rank = av->GetRank();
 	if (rank != CheckDims(dims))
 		E_TypeErr(FromSValue(av), S(L_ARRAY));
-	DWORD_PTR *pData = 0;
+	uintptr_t *pData = 0;
 	if (!displ) {
 		if (1==rank && elType==av->m_elType && !(av->m_flags & FLAG_Displaced)) {
 			size_t prevDim = AsNumber(Type(av->m_dims)==TS_CONS ? Car(av->m_dims) : CP(av->m_dims));
 			size_t newDim = AsNumber(Type(dims)==TS_CONS ? Car(dims) : dims);
-			pData = (DWORD_PTR*)Realloc(av->m_pData, (newDim*CArrayValue::ElementBitSize(elType)+LISP_BITS_IN_CP-1)/LISP_BITS_IN_CP*sizeof(DWORD_PTR));
+			pData = (uintptr_t*)Realloc(av->m_pData, (newDim*CArrayValue::ElementBitSize(elType)+LISP_BITS_IN_CP-1) / LISP_BITS_IN_CP * sizeof(uintptr_t));
 			if (newDim > prevDim)
 				CArrayValue::Fill(pData, elType, prevDim, newDim, initEl);
 			goto LAB_END;
@@ -790,7 +775,7 @@ void CLispEng::F_VectorPushExtend() {
 	CArrayValue *av = ToVector(SV);
 	size_t ext;
 	if (pext == V_U)
-		ext = 1024/CArrayValue::ElementBitSize(av->GetElementType());
+		ext = 1024 / CArrayValue::ElementBitSize(av->GetElementType());
 	else if (!(ext = AsPositive(pext)))
 		E_TypeErr(pext, List(S(L_INTEGER), V_0, S(L_ASTERISK)));
 

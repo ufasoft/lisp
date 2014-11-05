@@ -821,29 +821,36 @@ inline HRESULT HResult(unsigned long err) { return (HRESULT)err; }
 #	define DBG_LOCAL_IGNORE_NAME(hr, name)
 #endif
 
-
+String TruncPrettyFunction(const char *fn);
 
 } // Ext::
 
 
 #define OUTPUT_DEBUG(s) ((*(ostream*)Ext::CTrace::s_pOstream << s), 0)
 
+#ifdef _MSC_VER
+#	define EXT_TRC_FUNCNAME __FUNCTION__
+#else
+#	define EXT_TRC_FUNCNAME Ext::TruncPrettyFunction(__PRETTY_FUNCTION__)
+#endif
+
+
 #if UCFG_TRC
 #	define DBG_PARAM(param) param
-#	define TRC(level, s) { if ((1<<level) & Ext::CTrace::s_nLevel) Ext::CTraceWriter(1<<level, __FUNCTION__).Stream() << s; }
+#	define TRC(level, s) { if ((1<<level) & Ext::CTrace::s_nLevel) Ext::CTraceWriter(1<<level, EXT_TRC_FUNCNAME).Stream() << s; }
 
 #	define TRCP(level, s) { if (level & Ext::CTrace::s_nLevel) {				\
 		char obj[sizeof(Ext::CTraceWriter)];									\
-		Ext::CTraceWriter& w = Ext::CTraceWriter::CreatePreObject(obj, level, __FUNCTION__);				\
+		Ext::CTraceWriter& w = Ext::CTraceWriter::CreatePreObject(obj, level, EXT_TRC_FUNCNAME);				\
 		w.Printf s;																\
 		w.~CTraceWriter(); }}												
 
 
 #	define TRC_SHORT(level, s) ( (1<<level) & Ext::CTrace::s_nLevel ? OUTPUT_DEBUG(' ' << s) : 0)
 #	define D_TRACE(cat, level, args) ( ((1<<level) & Ext::CTrace::s_nLevel) && cat.Enabled ? OUTPUT_DEBUG(cat.m_name << ": " << args << endl):0)
-#	define FUN_TRACE  Ext::CFunTrace _funTrace(__FUNCTION__, 0);
-#	define FUN_TRACE_1  Ext::CFunTrace _funTrace(__FUNCTION__, 1);
-#	define FUN_TRACE_2  Ext::CFunTrace _funTrace(__FUNCTION__, 2);
+#	define FUN_TRACE  Ext::CFunTrace _funTrace(EXT_TRC_FUNCNAME, 0);
+#	define FUN_TRACE_1  Ext::CFunTrace _funTrace(EXT_TRC_FUNCNAME, 1);
+#	define FUN_TRACE_2  Ext::CFunTrace _funTrace(EXT_TRC_FUNCNAME, 2);
 
 #	define CLASS_TRACE(name) class CClassTrace : public CFunTrace { \
 	public: \

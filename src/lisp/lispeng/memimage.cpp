@@ -1,11 +1,8 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
+
+#if UCFG_WIN32
+#	include <el/libext/win32/ext-win.h>
+#endif
 
 #include "lispeng.h"
 
@@ -20,7 +17,7 @@ CObMap::CObMap()
 
 struct CListElement {
 	CP m_p;
-	int m_len;
+	size_t m_len;
 
 	CListElement(CP p)
 		:	m_p(p)
@@ -62,12 +59,12 @@ BlsBase::BlsBase()
 
 
 void BlsWriter::WriteLens() {
-	for (int i=0; i<m_arCount.size(); ++i)
+	for (size_t i=0; i<m_arCount.size(); ++i)
 		WriteSize(m_arCount[i]);
 }
 
 void BlsReader::ReadLens() {
-	for (int i=0; i<m_arCount.size(); ++i)
+	for (size_t i=0; i<m_arCount.size(); ++i)
 		m_arCount[i] = ReadSize();
 }
 
@@ -78,7 +75,7 @@ const int g_arTS[32] = {
 #	undef LTYPE
 };
 
-void BlsWriter::WriteVal(byte ts, DWORD_PTR idx) {
+void BlsWriter::WriteVal(byte ts, uintptr_t idx) {
 #if LISP_DYN_IDX_SAVE
 	int n = 7;
 	if (idx < 256)
@@ -98,7 +95,7 @@ void BlsWriter::WriteVal(byte ts, DWORD_PTR idx) {
 	WriteBytes(n, idx);
 }
 
-void BlsWriter::WriteSignedVal(byte ts, LONG_PTR idx) {
+void BlsWriter::WriteSignedVal(byte ts, intptr_t idx) {
 #if LISP_DYN_IDX_SAVE
 	int n = 7;
 	if (idx < 128 && idx >= -128)
@@ -122,8 +119,7 @@ void BlsWriter::WriteSignedVal(byte ts, LONG_PTR idx) {
 const byte TS_NIL = TS_READLABEL;  // TS_READ_LABEL cannot be in image, so use this number as NIL tag
 
 void BlsWriter::WriteCP(const CSPtr& p) {
-	switch (byte ts = (byte)Type(p))
-	{
+	switch (byte ts = (byte)Type(p)) {
 	case TS_CHARACTER:
 		{
 			wchar_t ch = AsChar(p);
@@ -160,14 +156,13 @@ void BlsWriter::WriteCP(const CSPtr& p) {
 	}
 }
 
-pair<byte, DWORD_PTR> BlsReader::ReadByteVal() const {
+pair<byte, uintptr_t> BlsReader::ReadByteVal() const {
 	byte b = (byte)ReadBytes(1);
 
 	int c = b >> 6;
 	b &= 0x1F;
-	DWORD_PTR r = 0;
-	switch (c)
-	{
+	uintptr_t r = 0;
+	switch (c) {
 #if LISP_DYN_IDX_SAVE
 	case 0:
 		r = ReadBytes(1);
@@ -193,7 +188,7 @@ pair<byte, DWORD_PTR> BlsReader::ReadByteVal() const {
 CP BlsReader::ReadVal(byte ts) const {
 	int c = ts >> 6;
 	ts &= 0x1F;
-	LONG_PTR r;
+	intptr_t r;
 	switch (c) {
 #if LISP_DYN_IDX_SAVE
 	case 0:
@@ -219,7 +214,7 @@ CP BlsReader::ReadVal(byte ts) const {
 }
 
 const BlsReader& operator>>(const BlsReader& rd, CSPtr& p) {
-	DWORD_PTR ts = rd.ReadBytes(1);
+	byte ts = rd.ReadBytes(1);
 	switch (ts & 0x1F) {
 	case TS_NIL:
 		p = 0;
@@ -283,20 +278,20 @@ void CLispEng::LoadMem(Stream& bstm) {
 	nNonCons += nForeignPointer;
 #endif
 
-	int i;
-	for (i=0; i<m_arValueMan.size(); i++)
+	size_t i;
+	for (i=0; i<m_arValueMan.size(); ++i)
 		m_arValueMan[i]->PrepareType(rd.m_arCount[i]);
-	for (i=0; i<RESERVED_CONS; i++) {
+	for (i=0; i<RESERVED_CONS; ++i) {
 		m_consMan.get_Base()[i].m_car = 0;
 		m_consMan.get_Base()[i].m_cdr = 0;
 	}
 	size_t count = rd.ReadSize();
 	CConsValue *pCons = m_consMan.Base+RESERVED_CONS;
-	for (i=0; i<count; i++) {
+	for (i=0; i<count; ++i) {
 		size_t len = rd.ReadSize(),
 			n = rd.ReadSize();
-		for (int j=0; j<n; j++)
-			for (int k=0; k<len; k++) {
+		for (size_t j=0; j<n; j++)
+			for (size_t k=0; k<len; ++k) {
 				rd >> pCons->m_car;
 				if (k == len-1)
 					pCons->m_cdr = 0;
@@ -306,17 +301,17 @@ void CLispEng::LoadMem(Stream& bstm) {
 			}
 	}
 
-	for (CConsValue *pEnd=m_consMan.Base+rd.m_arCount[0]-nNonCons; pCons != pEnd; pCons++)
+	for (CConsValue *pEnd=m_consMan.Base+rd.m_arCount[0]-nNonCons; pCons != pEnd; ++pCons)
 		pCons->Read(rd);
 
 #if UCFG_LISP_GC_USE_ONLY_BITMAP
-	for (int i=0; i<nFloat; ++i, ++pCons)
+	for (size_t i=0; i<nFloat; ++i, ++pCons)
 		((CFloat*)pCons)->Read(rd);
 #endif
 
 #if UCFG_LISP_FFI
 	LoadFFI(rd);
-	for (int i=0; i<nForeignPointer; ++i, ++pCons)
+	for (size_t i=0; i<nForeignPointer; ++i, ++pCons)
 		((CForeignPointer*)pCons)->Read(rd);
 #endif
 
@@ -356,8 +351,8 @@ void CLispEng::SaveMem(Stream& bstm) {
 	wr.WriteStruct(header);
 	(BinaryWriter&)wr << vector<String>(); //!!!for secret m_arModule;
 
-	int i;
-	for (i=0; i<m_arValueMan.size(); i++)
+	size_t i;
+	for (i=0; i<m_arValueMan.size(); ++i)
 		wr.m_arCount[i] = m_arValueMan[i]->ScanType(wr.m_obMap);
 
 	//!!!Verify(wr.m_obMap);//!!!
@@ -367,7 +362,7 @@ void CLispEng::SaveMem(Stream& bstm) {
 
 #if UCFG_LISP_GC_USE_ONLY_BITMAP
 	UInt32 nFloat = 0;
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++)
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j)
 		if (BitOps::BitTest(m_consMan.m_pBitmap, j) && !BitOps::BitTest(m_pBitmapCons, j))
 			++nFloat;
 	wr.WriteSize(nFloat);
@@ -376,7 +371,7 @@ void CLispEng::SaveMem(Stream& bstm) {
 
 #if UCFG_LISP_FFI
 	UInt32 nForeignPointer = 0;
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++) {
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j) {
 		if (BitOps::BitTest(m_pBitmapCons, j) && ((CSValueEx*)(m_consMan.Base+j))->m_type==TS_EX_FF_PTR)
 			++nForeignPointer;
 	}
@@ -388,7 +383,7 @@ void CLispEng::SaveMem(Stream& bstm) {
 	BASEWORD *bm = new BASEWORD[m_consMan.m_size/BASEWORD_BITS];
 	memset(bm, 0, m_consMan.m_size/8);
 	
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++) {
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j) {
 		CConsValue *cons = m_consMan.Base+j;
 		if (!BitOps::BitTest(bm, j) && BitOps::BitTest(m_pBitmapCons, j)
 #if UCFG_LISP_FFI
@@ -406,7 +401,7 @@ void CLispEng::SaveMem(Stream& bstm) {
 	}
 
 	vector<CListElement> arLE;
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++) {
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j) {
 		if (!BitOps::BitTest(bm, j) && BitOps::BitTest(m_pBitmapCons, j)
 #if UCFG_LISP_FFI
 			&& ((CSValueEx*)(m_consMan.Base+j))->m_type!=TS_EX_FF_PTR
@@ -429,7 +424,7 @@ void CLispEng::SaveMem(Stream& bstm) {
 		deq[i] = i;
 	deq[0] = 0;					//!!!?
 	vector<CLenLists> ar;
-	for (i=0; i<arLE.size(); i++) {
+	for (i=0; i<arLE.size(); ++i) {
 		CListElement& le = arLE[i];
 		CP p = le.m_p;
 		for (CP q=p; q; Inc(q))
@@ -447,7 +442,7 @@ LAB_OUT:
 		;
 	}
 	DWORD nMaxList = n;
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++) {
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j) {
 		if (BitOps::BitTest(m_pBitmapCons, j) && BitOps::BitTest(m_pBitmapCons, j) 
 #if UCFG_LISP_FFI
 			&& ((CSValueEx*)(m_consMan.Base+j))->m_type!=TS_EX_FF_PTR
@@ -457,13 +452,13 @@ LAB_OUT:
 	}
 
 #if UCFG_LISP_GC_USE_ONLY_BITMAP
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++)
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j)
 		if (BitOps::BitTest(m_consMan.m_pBitmap, j) && !BitOps::BitTest(m_pBitmapCons, j))
 			deq[j] = n++; 
 #endif
 
 #if UCFG_LISP_FFI
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++)
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j)
 		if (BitOps::BitTest(m_pBitmapCons, j) &&  ((CSValueEx*)(m_consMan.Base+j))->m_type==TS_EX_FF_PTR)
 			deq[j] = n++; 
 #endif
@@ -471,11 +466,11 @@ LAB_OUT:
 	wr.WriteSize(ar.size());
 
 	//!!!  (BinaryWriter&)wr << nMaxList;
-	for (i=0; i<ar.size(); i++) {
+	for (i=0; i<ar.size(); ++i) {
 		CLenLists& ll = ar[i];
 		wr.WriteSize(ll.m_len);
 		wr.WriteSize(ll.m_ar.size());
-		for (int j=0; j<ll.m_ar.size(); j++) {
+		for (size_t j=0; j<ll.m_ar.size(); ++j) {
 #ifdef _X_DEBUG //!!!D
 			for (CP p=ll.m_ar[j], car; SplitPair(p, car);)
 				if (!IntegerP(car))
@@ -488,7 +483,7 @@ LAB_OUT_INT:
 		}
 	}
 
-	for (int j=1; j<m_consMan.m_size; j++) {		//!!! may be from reserved
+	for (size_t j=1; j<m_consMan.m_size; ++j) {		//!!! may be from reserved
 		CConsValue *p = m_consMan.Base+j;
 		if (BitOps::BitTest(m_pBitmapCons, j) && BitOps::BitTest(m_pBitmapCons, j) && deq[j] >= nMaxList
 #if UCFG_LISP_FFI
@@ -499,24 +494,24 @@ LAB_OUT_INT:
 	}
 
 #if UCFG_LISP_GC_USE_ONLY_BITMAP
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++)
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j)
 		if (BitOps::BitTest(m_consMan.m_pBitmap, j) && !BitOps::BitTest(m_pBitmapCons, j))
 			((CFloat*)m_consMan.get_Base()+j)->Write(wr);
 #endif
 
 #if UCFG_LISP_FFI
 	SaveFFI(wr);
-	for (int j=RESERVED_CONS; j<m_consMan.m_size; j++)
+	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j)
 		if (BitOps::BitTest(m_pBitmapCons, j) &&  ((CSValueEx*)(m_consMan.Base+j))->m_type==TS_EX_FF_PTR)
 			((CForeignPointer*)m_consMan.Base+j)->Write(wr);
 #endif
 
 
 	delete bm;
-	delete[] (BASEWORD*)SwapRet(m_pBitmapCons, (void*)0);
+	delete[] (BASEWORD*)exchange(m_pBitmapCons, (void*)0);
 	FreeReservedBuffers();
 
-	for (i=1; i<m_arValueMan.size(); i++)
+	for (i=1; i<m_arValueMan.size(); ++i)
 		m_arValueMan[i]->WriteType(wr);
 
 	//!!!  (BinaryWriter&)wr << nArray;

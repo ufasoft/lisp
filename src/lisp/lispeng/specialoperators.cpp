@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -72,12 +65,8 @@ void __fastcall CLispEng::Prog() {
 	SkipStack(1);
 }
 
-void __fastcall CLispEng::Progn(CP p)  {	//!!! write shorter
-	if (p) {
-		Push(p);
-		Prog();
-	} else
-		ClearResult();
+void CLispEng::F_Progn() {
+	Progn(Pop());
 }
 
 void __fastcall CLispEng::PrognNoRec(CP p) {
@@ -188,8 +177,7 @@ void CLispEng::F_Function() {
 	} else {
 		if (FunnameP(funname)) {
 			m_r = GetSymFunction(funname, m_env.m_funEnv);
-			switch (Type(m_r))
-			{
+			switch (Type(m_r)) {
 			case TS_FUNCTION_MACRO:
 				m_r = ToFunctionMacro(m_r)->m_function; //!!!O
 			case TS_SUBR:
@@ -403,11 +391,11 @@ void CLispEng::CallBindedForms(FPBindVar pfn, CP caller, CP varSpecs, CP declars
 	}
 }
 
-CP CLispEng::BindLet(int n, CP& sym, CP form) {
+CP CLispEng::BindLet(size_t n, CP& sym, CP form) {
 	return form==V_U ? 0 : Eval(form);
 }
 
-CP CLispEng::BindLetA(int n, CP& sym, CP form) {
+CP CLispEng::BindLetA(size_t n, CP& sym, CP form) {
 	CP r = form==V_U ? 0 : Eval(form);
 	sym |= FLAG_ACTIVE;
 	return r;
@@ -683,10 +671,6 @@ void CLispEng::F_MultipleValueProg1() {
 	StackToMv(cVal);
 }
 
-void CLispEng::F_Progn() {
-	Progn(Pop());
-}
-
 void CLispEng::F_Progv() {
 	LISP_TAIL_REC_DISABLE_1;
 
@@ -699,7 +683,7 @@ void CLispEng::F_Progv() {
 	PrognNoRec(body);
 }
 
-CP CLispEng::BindSymbolMacrolet(int n, CP& sym, CP form) {
+CP CLispEng::BindSymbolMacrolet(size_t n, CP& sym, CP form) {
 	return FromSValueT(CreateSymbolMacro(form), TS_SYMBOLMACRO);
 }
 
@@ -728,8 +712,7 @@ void CLispEng::F_Tagbody() {
 	CEnv1GFrame goFrame;
 	int count = 0;
 	for (CP bodyrest=body, car; SplitPair(bodyrest, car);) {
-		switch (Type(car))
-		{
+		switch (Type(car)) {
 		case TS_SYMBOL:
 		case TS_FIXNUM:
 			Push(bodyrest, car);
@@ -771,8 +754,7 @@ void CLispEng::F_Tagbody() {
 void CLispEng::F_Go() {
 	CP *frame,
 		tag = Pop();
-	switch (Type(tag))
-	{
+	switch (Type(tag)) {
 	case TS_SYMBOL:
 	case TS_FIXNUM:
 		break;
@@ -795,7 +777,7 @@ void CLispEng::F_Go() {
 	}
 	while (SplitPair(env, car)) {
 		CArrayValue *av = ToArray(Car(car));
-		for (int i=0; i<av->TotalSize(); i++)
+		for (size_t i=0; i<av->TotalSize(); ++i)
 			if (av->m_pData[i] == tag) {		 //!!! must be EQL
 				env = Cdr(car);
 				if (env == V_D)

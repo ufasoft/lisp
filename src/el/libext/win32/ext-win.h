@@ -37,6 +37,8 @@
 #	define WM_NCDESTROY            (WM_APP - 1)
 #endif
 
+typedef int (__cdecl * _PNH)( size_t );
+
 namespace Ext {
 
 class CComObjectRootBase;
@@ -695,7 +697,7 @@ struct AFX_EXTENSION_MODULE {
 
 #endif
 
-typedef int (__cdecl * _PNH)( size_t );
+
 
 class CThreadHandleMaps {
 public:

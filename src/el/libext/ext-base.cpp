@@ -428,7 +428,7 @@ class CDebugStreambuf : public streambuf {
 #elif defined WDM_DRIVER
 		KdPrint(("%s", s));
 #else
-		printf("%s", s);
+		fprintf(stderr, "%s", s);
 #endif
 		m_buf.clear();
 	}
@@ -510,7 +510,9 @@ void AFXAPI ProcessExceptionInCatch() {
 
 #endif // !UCFG_WDM && !UCFG_MINISTL
 
-
+String TruncPrettyFunction(const char *fn) {
+	return String(fn, strchr(fn, '(')-fn);
+}
 
 bool CTrace::s_bShowCategoryNames;
 static CDebugStreambuf s_debugStreambuf;
@@ -588,7 +590,7 @@ static int s_nThreadNumber;
 
 union TinyThreadInfo {
 	struct {
-		byte Counter[3];
+		byte Counter[3];		//!!!Endianess
 		byte TraceLocks;
 	};
 	void *P;
@@ -721,7 +723,7 @@ inline int AFXAPI GetThreadNumber() {
 #else
 	int r = (int)(DWORD_PTR)(void*)t_threadNumber.Value;
 	if (!(r & 0xFFFFFF))
-		t_threadNumber.Value = (void*)(DWORD_PTR)((r = ++s_nThreadNumber) | r);
+		t_threadNumber.Value = (void*)(DWORD_PTR)(r |= ++s_nThreadNumber);
 	return r & 0xFFFFFF;
 #endif
 }

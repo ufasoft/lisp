@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -86,8 +79,7 @@ bool CLispEng::GetParamType(CP& p, CP& car, CParamType& pt) {
 	else if (Type(car) != TS_SYMBOL)
 		return false;
 	else {
-		switch (AsIndex(car))
-		{
+		switch (AsIndex(car)) {
 		case ENUM_L_OPTIONAL:			pt = PT_OPTIONAL; break;
 		case ENUM_L_REST:				pt = PT_REST; break;
 		case ENUM_L_KEY:				pt = PT_KEY; break;
@@ -167,7 +159,7 @@ CP CLispEng::GetClosure(CP lambdaBody, CP name, bool bBlock, CEnvironment& env) 
 		if (m_bExpandingLambda)
 			lambdaBody = SV;
 		else {
-#ifdef C_LISP_LAZY_EXPAND
+#if UCFG_LISP_LAZY_EXPAND
 			lambdaBody = SV;
 #else
 			Push(SV, NestVar(m_env.m_varEnv));
@@ -175,11 +167,10 @@ CP CLispEng::GetClosure(CP lambdaBody, CP name, bool bBlock, CEnvironment& env) 
 			CBoolKeeper keeper(m_bExpandingLambda, true);
 			Funcall(S(L_EXPAND_LAMBDABODY_MAIN), 3);
 			lambdaBody = m_r;
-#endif
+#endif // UCFG_LISP_LAZY_EXPAND
 
 #ifdef _DEBUG
-			if (bPrintAfter)
-			{
+			if (bPrintAfter) {
 				cerr << "\n-----------------L_EXPAND_LAMBDABODY_MAIN-------------------\n";
 				Print(name);
 				cerr << "\n";
@@ -188,9 +179,8 @@ CP CLispEng::GetClosure(CP lambdaBody, CP name, bool bBlock, CEnvironment& env) 
 #endif
 		}
 	}
-	else
-	{
-		lambdaBody = SwapRet(SV, source);
+	else {
+		lambdaBody = exchange(SV, source);
 	}
 	lambdaList = Car(lambdaBody);
 	ParseDD(Cdr(lambdaBody), true);
@@ -334,7 +324,7 @@ CP CLispEng::GetClosure(CP lambdaBody, CP name, bool bBlock, CEnvironment& env) 
 			nVar++;
 			initForm = 0;
 			if (Type(item) != TS_SYMBOL) {
-				CP r = SwapRet(item, 0);
+				CP r = exchange(item, 0);
 				if (SplitPair(r, item) && SplitPair(r, initForm) && r)
 					E_ProgramErr();
 			}
@@ -504,8 +494,7 @@ void CLispEng::F_FindSubr() {
 CP *CLispEng::FindVarBind(CP sym, CP env) {
 	bool bFromInsideMacrolet = false;
 	while (true) {
-		switch (Type(env))
-		{
+		switch (Type(env)) {
 		case TS_ARRAY:
 			{
 				CArrayValue *vv = AsArray(env);
@@ -576,22 +565,19 @@ void CLispEng::CheckAllowOtherKeys(CP *pBase, size_t nArg) {
 			E_ProgramErr();
 }
 
-#ifdef _TEST //!!!
-int g_maxDeep;
+#if UCFG_LISP_TEST //!!!
+	int g_maxDeep;
 #endif
 
 void CLispEng::ApplyIntFunc(CP fun, ssize_t nArg) {
-
 #if UCFG_LISP_TAIL_REC
 	if (LISP_TAIL_REC_ENABLED) {
-
 		for (CP *p=m_pStack; p!=m_pStackTop; ++p) {
 			CP q = *p;
 			if (Type(q) == TS_FRAMEINFO) {
 				int idx = AsIndex(q);
 				CFrameType ft = CFrameType(idx & FRAME_TYPE_MASK);
-				switch (ft)
-				{
+				switch (ft) {
 				case FT_APPLY:
 					m_tailedFun = fun;
 					m_nTailArgs = nArg;
@@ -646,20 +632,20 @@ LAB_TAIL_RET:
 		s_fos << "---" << endl;
 #endif
 
-		fun = SwapRet(m_tailedFun, 0);
+		fun = exchange(m_tailedFun, 0);
 		m_pStack = pStack + nArg - m_nTailArgs;
 		memmove(m_pStack, m_pTailStack, (nArg = m_nTailArgs)*sizeof(CP));
 		pStack = m_pStack;
 //!!!		LISP_TAIL_REC_ENABLED = false;
 	}
-#endif
+#endif	// UCFG_LISP_TAIL_REC
 
 
 #ifdef _X_TEST //!!!
 	static int base = (int)&fun;
 	g_maxDeep = _MAX(g_maxDeep, base-(int)&fun);
 #endif
-#ifdef C_LISP_LAZY_EXPAND
+#if UCFG_LISP_LAZY_EXPAND
 	if (!m_bExpandingLambda && !f.m_bExpanded && f.m_form) {
 		AsIntFunc(fun)->m_bExpanded = true;
 		Push(fun);
@@ -674,7 +660,7 @@ LAB_TAIL_RET:
 		AsIntFunc(fun)->m_body = m_r;
 		f = *AsIntFunc(fun);
 	}
-#endif
+#endif // UCFG_LISP_LAZY_EXPAND
 	CP *pArgs = m_pStack+nArg;
 	{
 		CApplyFrame applyFrame(_self, pArgs, fun);
@@ -819,13 +805,13 @@ LAB_AUX:
 			SkipStack(1);
 		}
 
-
 		LISP_TAIL_REC_KEEPER(true);
 #if UCFG_LISP_TAIL_REC == 2
 		CTailRecKeeper trKeeper2(_self, false);	// for right work of Progn()
 #endif
-			
+
 		Progn(body);
+
 #if UCFG_LISP_TAIL_REC
 		if (m_tailedFun) {
 			goto LAB_TAIL_RET;
@@ -926,8 +912,7 @@ void CLispEng::Apply(CP fun, ssize_t nArg) {
 
 	LISP_TRACER;
 
-	switch (Type(fun))
-	{
+	switch (Type(fun)) {
 	case TS_CCLOSURE:
 		ApplyClosure(fun, nArg);	//!!!Q may be direct call to ApplyClosure(...rest)?
 		break;
@@ -946,17 +931,18 @@ void CLispEng::Apply(CP fun, ssize_t nArg) {
 
 void CLispEng::ApplyHooked(CP fun, ssize_t nArg) {
 	while (Signal) {		//!!!
-		int sig = SwapRet(m_Signal, 0);
-		switch (sig)
-		{
+		int sig = exchange(m_Signal, 0);
+		switch (sig) {
 		case SIGINT:
 			E_Signal(S(L_INTERRUPT_CONDITION));
 			break;
-		case HRESULT_OF_WIN32(ERROR_STACK_OVERFLOW):
+		case int(HRESULT_OF_WIN32(ERROR_STACK_OVERFLOW)):
 #ifdef X_DEBUG//!!!D
 			PrintFrames();
 #endif
-			E_Error(S(L_STACK_OVERFLOW_ERROR));
+			Push(Spec(L_STACK_OVERFLOW_INSTANCE));
+			F_InvokeHandlers();
+			abort();
 			break;
 		case SIGTERM: Throw(E_EXT_NormalExit); //!!!
 		}
@@ -1065,8 +1051,7 @@ CP __fastcall CLispEng::GetSymFunction(CP sym, CP fenv) {
 		}
 		bool bFromInsideMacrolet = false;
 		while (true) {
-			switch (Type(fenv))
-			{
+			switch (Type(fenv)) {
 			case TS_ARRAY:
 				{
 					CArrayValue *vv = AsArray(fenv);
@@ -1117,7 +1102,7 @@ void CLispEng::ApplySubr(CP fun, ssize_t nArg) {
 		E_ProgramErr(IDS_E_TooFewArguments, name, Listof(n+1));
 	}
 	if ((nArg-=ror.m_nOpt) < 0)
-		PushUnbounds(-SwapRet(nArg, 0));
+		PushUnbounds(- exchange(nArg, 0));
 	size_t idx = AsIndex(fun) & 0x3FF;
 	ClearResult();
 	if (!WithRestP(fun)) {
@@ -1133,7 +1118,7 @@ void CLispEng::ApplySubr(CP fun, ssize_t nArg) {
 			CP *vals = (CP*)alloca(nKey*sizeof(CP));
 			FillMem(vals, nKey, V_U);
 
-			for (int i=0; i<nKey; i++) {
+			for (size_t i=0; i<nKey; ++i) {
 				CP kw = get_Sym(CLispSymbol(pk[i]));
 				for (int j=0; j<nArg; j+=2)
 					if (m_pStack[j+1] == kw) {
@@ -1309,8 +1294,7 @@ CP CLispEng::EvalCall(CP p) {
 			form = AsCons(p);
 		}
 FUN_DISPATCH:
-		switch (Type(fun)) 
-		{
+		switch (Type(fun)) {
 		case TS_FUNCTION_MACRO:
 			fun = ToFunctionMacro(fun)->m_function; //!!!O
 			goto FUN_DISPATCH;
@@ -1453,12 +1437,11 @@ CP CLispEng::EvalHooked(CP p) {
 }
 
 void CLispEng::CheckBeforeSetSymVal(CP sym, CP v) {
-	switch (sym)
-	{
+	switch (sym) {
 	case S(L_S_EVALHOOK):
 		m_mfnEval = v ? &class_type::EvalHooked : &class_type::EvalImp;
 #if UCFG_LISP_FAST_EVAL_ATOMS == 2
-		m_maskEvalHook = v ? ((CP)0)-1 : CP((2<<(sizeof(CP)*8-VALUE_SHIFT))-2);
+		m_maskEvalHook = v ? ((CP)0)-1 : CP((CP(2)<<(sizeof(CP)*8-VALUE_SHIFT))-2);
 #endif						 
 		break;
 	case S(L_S_APPLYHOOK):
@@ -1477,7 +1460,7 @@ CP CLispEng::SwapIfDynSymVal(CP symWithFlags, CP v) {
 #if UCFG_LISP_FAST_HOOKS
 		CheckBeforeSetSymVal(sym, v);
 #endif
-		return SwapRet(ToSymbol(sym)->m_dynValue, v);
+		return exchange(ToSymbol(sym)->m_dynValue, v);
 	} else
 		return v;
 }
@@ -1495,8 +1478,7 @@ void CLispEng::F_MacroFunction() {
 		if (env)
 			fenv = ToVector(env)->GetElement(1);
 	CP fun = GetSymFunction(sym, fenv);
-	switch (Type(fun))
-	{
+	switch (Type(fun)) {
 	case TS_SPECIALOPERATOR:
 		m_r = GetSymProp(sym, S(L_MACRO));
 		break;
@@ -1525,8 +1507,7 @@ void CLispEng::F_Macroexpand1() {
 	}
 	m_arVal[1] = 0;
 	CP r = Pop();
-	switch (Type(r))
-	{
+	switch (Type(r)) {
 	case TS_CONS:
 		{
 			if (Type(car=Car(r)) != TS_SYMBOL)
@@ -1540,8 +1521,7 @@ void CLispEng::F_Macroexpand1() {
 				if (env)
 					fenv = ToVector(env)->GetElement(1);
 			CP fun = GetSymFunction(car, fenv);
-			switch (Type(fun))
-			{
+			switch (Type(fun)) {
 			case TS_SPECIALOPERATOR:
 				if ((m_r=Get(car, S(L_MACRO))) == V_U)
 					goto LAB_RET;

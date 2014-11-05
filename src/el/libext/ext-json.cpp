@@ -93,8 +93,9 @@ public:
 	}
 
 	String ToString() const override {
-		const char *s = ::json_string_value(m_json);
-		return Encoding::UTF8.GetChars(ConstBuf(s, strlen(s)));
+		if (const char *s = ::json_string_value(m_json))
+			return Encoding::UTF8.GetChars(ConstBuf(s, strlen(s)));
+		Throw(E_EXT_InvalidCast);
 	}
 
 	Int64 ToInt64() const override {
@@ -139,9 +140,12 @@ public:
 	}
 
 	void Print(ostream& os) const override {
-		char *s = json_dumps(m_json, JSON_INDENT(2));
-		os << s;
-		FreeWrap(s);
+		size_t flags = (os.flags() & ios::adjustfield) == ios::left ? JSON_COMPACT : JSON_INDENT(2);
+		if (char *s = json_dumps(m_json, flags)) {
+			os << s;
+			FreeWrap(s);
+		} else
+			os << "null";		
 	}
 private:
 	JsonHandle m_json;
@@ -237,9 +241,13 @@ protected:
 	void Print(ostream& os, const VarValue& v) override {
 		JsonHandle jh(CopyToJsonT(v));
 		size_t flags = (Indent ? JSON_INDENT(Indent) : 0) | (Compact ? JSON_COMPACT : 0);
-		char *s = json_dumps(jh, flags);
-		os << s;
-		FreeWrap(s);
+		if ((os.flags() & ios::adjustfield) == ios::left)
+			flags |= JSON_COMPACT;
+		if (char *s = json_dumps(jh, flags)) {
+			os << s;
+			FreeWrap(s);
+		} else
+			os << "null";
 	}
 };
 

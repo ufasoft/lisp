@@ -1,4 +1,6 @@
-#define UCFG_DEFINE_OLD_NAMES 1
+#ifdef _MSC_VER
+#	define UCFG_DEFINE_OLD_NAMES 1
+#endif
 
 #include <el/ext.h>
 
@@ -202,11 +204,11 @@ void * __cdecl operator new[](size_t sz) {
 */
 
 #	if UCFG_STDSTL
-void __cdecl operator delete[](void *p, const std::nothrow_t& ) {
+void __cdecl operator delete[](void *p, const std::nothrow_t& ) noexcept {
 	operator delete(p);//!!!
 }	
 #else
-void __cdecl operator delete[](void *p, const ExtSTL::nothrow_t& ) {
+void __cdecl operator delete[](void *p, const ExtSTL::nothrow_t& ) noexcept {
 	operator delete(p);//!!!
 }	
 #	endif // UCFG_STDSTL

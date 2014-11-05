@@ -1485,7 +1485,7 @@ bool ProcessObj::Start() {
 #if UCFG_WIN32_FULL
 
 	STARTUPINFO si = {sizeof si};
-	StaticAssert(SW_SHOWNORMAL == 1, Invalid_SW_SHOWNORMAL);
+	static_assert(SW_SHOWNORMAL == 1, "Invalid SW SHOWNORMAL");
 	si.wShowWindow = SW_SHOWNORMAL; // same as SW_NORMAL Critical for running iexplore
 	SafeHandle hI, hO, hE;
 #if UCFG_WCE

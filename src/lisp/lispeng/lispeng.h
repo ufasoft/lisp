@@ -1,11 +1,8 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #pragma once
+
+#ifdef _WIN32
+#	include <el/libext/ext-os-api.h>
+#endif
 
 #include "lisp.h"
 #include "resource.h"
@@ -171,7 +168,7 @@ public:
 		:	m_p(p)
 	{}
 
-	operator CP() const {return m_p;}
+	operator CP() const { return m_p; }
 	inline CSPtr& operator=(CP p) { m_p = p; return _self; }
 };
 
@@ -218,7 +215,7 @@ public:
 };
 
 #if UCFG_LISP_MT
-	extern EXT_THREAD_PTR(CLispEng, t_pLisp);
+	extern EXT_THREAD_PTR(CLispEng) t_pLisp;
 #else
 	extern CLispEng *t_pLisp;
 #endif
@@ -252,28 +249,25 @@ CLispEng& __stdcall GetLisp();
 #	define DEBUG_NOT_INLINE __forceinline
 #endif
 
-__forceinline CP FromValue(LONG_PTR s, CTypeSpec ts) {
-	return ts | (DWORD_PTR(s) << VALUE_SHIFT);
+__forceinline CP FromValue(intptr_t s, CTypeSpec ts) {
+	return ts | (uintptr_t(s) << VALUE_SHIFT);
 }
 
 inline CP CreateChar(wchar_t ch) {
 	return FromValue(char_traits<wchar_t>::to_int_type(ch), TS_CHARACTER);
 }
 
-inline CP CreateFixnum(WORD n) { return FromValue(n, TS_FIXNUM); }
-inline CP CreateFixnum(LONG_PTR n) { return FromValue(n, TS_FIXNUM); }
-inline CP CreateFixnum(int n) { return FromValue(n, TS_FIXNUM); }
+inline CP CreateFixnum(UInt16 n) { return FromValue(n, TS_FIXNUM); }
+inline CP CreateFixnum(intptr_t n) { return FromValue(n, TS_FIXNUM); }
+inline CP CreateFixnum(size_t i) { return CreateFixnum((intptr_t)i); }
 
-#ifdef _WIN64
-#else
-	//!!! inline CP CreateFixnum(ssize_t i) { return CreateFixnum((int)i); }
+#if SIZE_MAX > UINT_MAX
+	inline CP CreateFixnum(int n) { return FromValue(n, TS_FIXNUM); }
 #endif
-
-inline CP CreateFixnum(size_t i) { return CreateFixnum((LONG_PTR)i); }
 
 inline CTypeSpec Type(CP p) { return CTypeSpec(byte(p)); }
 
-inline size_t AsIndex(DWORD_PTR p) {
+inline size_t AsIndex(uintptr_t p) {
 	return p >> VALUE_SHIFT;
 }
 
@@ -295,16 +289,16 @@ DECLSPEC_NORETURN void E_Error();
 
 class CObMap {
 public:
-	//!!!DWORD *m_arP[MAN_COUNT];
+	//!!!UInt32 *m_arP[MAN_COUNT];
 
 	struct CVal {
 		typedef CVal class_type;
 
-		static const LONG_PTR FLAG_MASK = LONG_PTR(1) << (sizeof(LONG_PTR)*8-1);
+		static const intptr_t FLAG_MASK = intptr_t(1) << (sizeof(intptr_t)*8-1);
 
-		LONG_PTR m_val;
+		intptr_t m_val;
 
-		CVal(LONG_PTR val = 0)
+		CVal(intptr_t val = 0)
 			:	m_val(val)
 		{
 		}
@@ -318,7 +312,7 @@ public:
 		}
 		DEFPROP(bool, Flag);
 
-		operator LONG_PTR() const {
+		operator intptr_t() const {
 			return m_val;
 		}		
 	};
@@ -358,13 +352,13 @@ public:
 		:	base(stm)
 	{}
 
-	void WriteBytes(int n, DWORD_PTR dw) {
+	void WriteBytes(int n, uintptr_t dw) {
 		base::Write(&dw, n);
 	}
 
 	void WriteLens();
-	void WriteVal(byte ts, DWORD_PTR idx);
-	void WriteSignedVal(byte ts, LONG_PTR idx);
+	void WriteVal(byte ts, uintptr_t idx);
+	void WriteSignedVal(byte ts, intptr_t idx);
 	void WriteCP(const CSPtr& p);
 
 	/*!!!
@@ -378,7 +372,7 @@ public:
 		return _self;
 	}*/
 
-	//!!!  static int CalculateBits(DWORD count);
+	//!!!  static int CalculateBits(UInt32 count);
 	//!!!  void CalculateBits();
 };
 
@@ -407,7 +401,7 @@ public:
 	}
 
 	void ReadLens();
-	pair<byte, DWORD_PTR> ReadByteVal() const;
+	pair<byte, uintptr_t> ReadByteVal() const;
 	CP ReadVal(byte ts) const;
 
 };
@@ -453,7 +447,7 @@ public:
 class CBignum : public CSValue {
 public:
 	BigInteger m_int;
-#if UCFG_USE_NTL		// sizeof(CBignum) should be >= 8
+#if UCFG_BIGNUM=='N'		// sizeof(CBignum) should be >= 8
 	UInt32 m_dummy;
 #endif
 
@@ -466,16 +460,16 @@ public:
 	void Read(const BlsReader& rd);
 private:
 	void Assert() {
-		StaticAssert(sizeof(CBignum) >= 8, sizeof_Bignum_very_small);
+		static_assert(sizeof(CBignum) >= 8, "sizeof_Bignum_very_small");
 	}
 };
 
-const DWORD FLAG_ENTERED = 0x80000000;
+const UInt32 FLAG_ENTERED = 0x80000000;
 
 #pragma pack(push, 4)
 struct CProfInfo {
-	LONGLONG m_nTicks;
-	DWORD m_nCount;
+	Int64 m_nTicks;
+	UInt32 m_nCount;
 
 	CProfInfo()
 	{}
@@ -498,7 +492,7 @@ class CProfPoint {
 public:
 	__forceinline CProfPoint(CProfInfo& profInfo) {
 		profInfo.m_nCount++;
-		if (*g_arProfEnd++ = *((DWORD*)&profInfo.m_nTicks+1) & 0x80000000 ? 0 : &profInfo)
+		if (*g_arProfEnd++ = *((UInt32*)&profInfo.m_nTicks+1) & 0x80000000 ? 0 : &profInfo)
 			profInfo.m_nTicks -= __rdtsc();
 	}
 
@@ -508,10 +502,10 @@ public:
 	}
 };
 
-#define PROF_POINT(profInfo) CProfPoint _profPoint(profInfo);
+#	define PROF_POINT(profInfo) CProfPoint _profPoint(profInfo);
 
 #else
-#define PROF_POINT(profInfo)
+#	define PROF_POINT(profInfo)
 #endif //LISP_PROFILE
 
 #pragma pack(push, 1)
@@ -524,7 +518,7 @@ public:
 	byte m_len,
 		m_stub;  // to align
 	String::Char m_buf[3];
-	DWORD m_sObj;
+	UInt32 m_sObj;
 	String::Char m_bufStub[4];
 
 	CQuickString()
@@ -612,7 +606,7 @@ inline bool operator<(const CQuickString& s1, const CQuickString& s2) {
 //!!!typedef CQuickString CLString;
 typedef String CLString;
 
-const DWORD SYMBOL_FLAG_CONSTANT = 0x40,
+const UInt32 SYMBOL_FLAG_CONSTANT = 0x40,
 	SYMBOL_FLAG_SPECIAL = 0x20;
 //!!!            SYMBOL_FLAG_MACRO    = 0x80000000,
 //!!!            SYMBOL_FLAG_MACROLET = 0x40000000;
@@ -626,10 +620,10 @@ public:
 		m_dynValue;
 
 	//!!!  byte m_byFlags;
-	LONG_PTR m_byPackage : 8;
+	intptr_t m_byPackage : 8;
 	//!!!  byte m_fun[3];
 	//!!!byte m_props[3];
-	LONG_PTR m_plist : CP_VALUE_BITS;
+	intptr_t m_plist : CP_VALUE_BITS;
 
 #if !UCFG_LISP_SPLIT_SYM
 	CLString m_s;
@@ -676,7 +670,7 @@ public:
 	bool m_bMacro         : 1;
 	bool m_bMacrolet      : 1;
 	};
-	DWORD m_dwFlags;
+	UInt32 m_dwFlags;
 	};*/
 
 	CSymbolValue() {
@@ -725,7 +719,7 @@ private:
 class CSymbolCompare
 {
 public:
-DWORD operator()(CSymbolValue *sv) const
+UInt32 operator()(CSymbolValue *sv) const
 {
 size_t r = 0;
 const wchar_t *p = sv->m_s;
@@ -926,13 +920,22 @@ private:
 class CHashMap;
 
 class CHashTable : public CSValueEx {
+	EXT_MOVABLE_BUT_NOT_COPYABLE(CHashTable);
 public:
 	CSPtr m_rehashSize,
 		m_rehashThreshold;
 
-	AutoPtr<CHashMap> m_pMap;
-
+	unique_ptr<CHashMap> m_pMap;
+	
 	CHashTable();
+
+	CHashTable(EXT_RV_REF(CHashTable) rv)
+		:	m_rehashSize(rv.m_rehashSize)
+		,	m_rehashThreshold(rv.m_rehashThreshold)
+		,	m_pMap(rv.m_pMap.release())
+	{
+	}
+
 	void Write(BlsWriter& wr);
 	void Read(const BlsReader& rd);
 };
@@ -1004,12 +1007,12 @@ class CMultiIterator {
 public:
 	vector<int> m_dims,
 		m_idxs;
-	DWORD_PTR *m_pData;
+	uintptr_t *m_pData;
 	byte m_elType;
 
 	CBool m_bEnd;
 
-	CMultiIterator(DWORD_PTR *pData, byte elType, CP dims);	
+	CMultiIterator(uintptr_t *pData, byte elType, CP dims);	
 	operator bool() { return !m_bEnd; }
 	void SetElement(CP v);
 
@@ -1031,8 +1034,8 @@ public:
 #endif
 
 	union {
-		DWORD_PTR *m_pData;
-		DWORD m_nDisplaceIndex;
+		uintptr_t *m_pData;
+		UInt32 m_nDisplaceIndex;
 	};
 
 	byte m_stub,
@@ -1062,9 +1065,9 @@ public:
 	}
 
 	size_t CalculateRowIndex(CP *pRest, size_t nArgs);
-	static DWORD_PTR *Alloc(size_t size);
-	static void Fill(DWORD_PTR *pData, byte elType, size_t beg, size_t end, CP initEl);
-	static DWORD_PTR *CreateData(byte elType, CP dims, CP initEl);
+	static uintptr_t *Alloc(size_t size);
+	static void Fill(uintptr_t *pData, byte elType, size_t beg, size_t end, CP initEl);
+	static uintptr_t *CreateData(byte elType, CP dims, CP initEl);
 	CP GetElement(size_t i);
 	void SetElement(size_t i, CP p);
 	CP GetByIterator(const vector<int>& vdims, const CMultiIterator& mi);
@@ -1078,8 +1081,7 @@ public:
 
 	size_t GetByteLength() {
 		size_t r = DataLength;
-		switch (m_elType)
-		{
+		switch (m_elType) {
 		case ELTYPE_T: r *= sizeof(CP); break;
 		case ELTYPE_BIT: r = (r+31)/32*4; break;
 		case ELTYPE_CHARACTER: r *= 2; break;
@@ -1408,14 +1410,14 @@ enum CParamType {
 	PT_NONE, PT_END, PT_OPTIONAL, PT_REST, PT_KEY, PT_ALLOW_OTHER_KEYS, PT_AUX, PT_BODY
 };
 
-#ifdef _TEST //!!!
-#define LISP_FUNC __stdcall
+#if UCFG_LISP_TEST //!!!
+#	define LISP_FUNC __stdcall
 #else
-#define LISP_FUNC __fastcall
+#	define LISP_FUNC __fastcall
 #endif
 
 
-//!!!const DWORD FREE_FLAG = 0x80000000;
+//!!!const UInt32 FREE_FLAG = 0x80000000;
 
 class CLispGC;
 
@@ -1441,7 +1443,8 @@ public:
 	virtual void WriteType(BlsWriter& wr) =0;
 	virtual void ReadType(const BlsReader& rd) =0;
 	virtual void Delete(void *p) =0;
-	virtual void Copy(void *p, const void *q) =0;
+//!!!R	virtual void Copy(void *p, const void *q) =0;
+	virtual void Move(void *p, const void *q) =0;
 
 	void *GetCleanBitmap() {
 		if (!m_pBitmap)
@@ -1450,10 +1453,10 @@ public:
 	}
 
 	void FreeBitmap() {
-		delete[] (BASEWORD*)SwapRet(m_pBitmap, nullptr);
+		delete[] (BASEWORD*)exchange(m_pBitmap, nullptr);
 	}
 
-	void FillEmpty(int i);
+	void FillEmpty(size_t i);
 	void Resize(size_t n);
 	void AfterApplyCheck(bool bSimple);
 	size_t ScanType(CObMap& obMap);
@@ -1468,13 +1471,18 @@ public:
 	{
 	}
 
-	void Delete(void *p) {
+	void Delete(void *p) override {
 		m_cbFreed += m_sizeof;
 		((T*)p)->~T();
 	}
 
-	void Copy(void *p, const void *q) {
+/*!!!R	void Copy(void *p, const void *q) override {
 		new(p) T(*(const T*)q);
+	}*/
+
+	void Move(void *p, const void *q) override {
+		new(p) T(std::move(*(T*)q));
+		m_cbFreed += m_sizeof;
 	}
 
 	T *get_Base() { return (T*)m_pBase; }
@@ -1811,7 +1819,7 @@ struct CStackRange {
 
 inline CP FromBool(bool b) { return b ? V_T : 0;	}
 
-inline LONG_PTR AsFixnum(CP p) { return ((LONG_PTR)p >> VALUE_SHIFT); } //!!!
+inline intptr_t AsFixnum(CP p) { return ((intptr_t)p >> VALUE_SHIFT); } //!!!
 
 class CVMContextBase {
 public:
@@ -1931,7 +1939,7 @@ public:
 
 	typedef unordered_map<CP, CP> CTracedFuns;
 	CTracedFuns m_tracedFuns;
-	CInt<int> m_traceLevel;
+	int m_traceLevel;
 
 	map<CP, String> m_mapObfuscated;
 
@@ -1939,7 +1947,7 @@ public:
 
 	typedef void (LISP_FUNC CLispEng::*FPLispFunc)();
 	typedef void (LISP_FUNC CLispEng::*FPLispFuncRest)(size_t nArgs);
-	typedef CP (CLispEng::*FPBindVar)(int n, CP& sym, CP form);
+	typedef CP (CLispEng::*FPBindVar)(size_t n, CP& sym, CP form);
 
 	typedef size_t (CLispEng::*PFNHash)(CP p);
 
@@ -1993,7 +2001,7 @@ public:
 			m_nOpt,
 			m_bCL;
 		const byte *m_keywords;
-		//!!!DWORD m_keywords;
+		//!!!UInt32 m_keywords;
 	};
 
 	struct CLispFuncR {
@@ -2248,7 +2256,7 @@ private:
 	unordered_map<void*, CP> m_funPtr2Symbol;
 
 
-	typedef unordered_map<String, AutoPtr<CForeignLibrary> > CName2lib;   //!!!shold be map<CP, ...>
+	typedef unordered_map<String, ptr<CForeignLibrary> > CName2lib;   //!!!shold be map<CP, ...>
 	CName2lib m_name2lib;
 
 	typedef pair<String, HANDLE> CStringHandle;
@@ -2500,8 +2508,7 @@ public:
 	}
 
 	bool IsFunc(CP p) {
-		switch (Type(p))
-		{
+		switch (Type(p)) {
 		case TS_CCLOSURE:
 		case TS_INTFUNC:
 		case TS_SUBR:
@@ -2571,7 +2578,7 @@ public:
 	__forceinline bool WithKeywordsP(CP p) { return p & (1 << (TYPE_BITS+17)); }
 
 	int ReadU();
-	LONG ReadS();
+	int ReadS();
 	void IgnoreS();
 	byte *ReadL();
 	size_t ReadOffset();
@@ -2848,7 +2855,7 @@ public:
 	CP __fastcall Cons(CP a, CP b);
 	CP BignumFrom(Int64 n);
 	
-	CP CreateInteger(LONG_PTR n) {
+	CP CreateInteger(intptr_t n) {
 		return (n < FIXNUM_LIMIT && n >= -FIXNUM_LIMIT) ? CreateFixnum(n) : BignumFrom(n);
 	}
 
@@ -2920,17 +2927,17 @@ public:
 	//!!!D  CP CreateOutputStringStream();
 	//!!!D  CObjectValue  *CreateObject();
 
-	static CP CreateSpecialOperator(DWORD n, DWORD nReq, DWORD nOpt, DWORD bRest) {
+	static CP CreateSpecialOperator(UInt32 n, UInt32 nReq, UInt32 nOpt, UInt32 bRest) {
 		return TS_SPECIALOPERATOR | (n<<TYPE_BITS) | (nReq<<(TYPE_BITS+10)) | (nOpt<<(TYPE_BITS+13)) | (bRest<<(TYPE_BITS+16));
 	}
 
-	static CP CreateSpecialOperator(DWORD n);
+	static CP CreateSpecialOperator(UInt32 n);
 
-	static CP CreateSubr(DWORD n, DWORD nReq, DWORD nOpt, DWORD bRest, const byte *keywords = 0) {
+	static CP CreateSubr(UInt32 n, UInt32 nReq, UInt32 nOpt, UInt32 bRest, const byte *keywords = 0) {
 		return TS_SUBR | (n<<TYPE_BITS) | (nReq<<(TYPE_BITS+10)) | (nOpt<<(TYPE_BITS+13)) | (bRest<<(TYPE_BITS+16)) | (bool(keywords)<<(TYPE_BITS+17));
 	}
 
-	static CP CreateSubr(DWORD n);
+	static CP CreateSubr(UInt32 n);
 
 	CIntFuncValue *CreateIntFunc() { return m_intFuncMan.CreateInstance(); }
 	CPackage *CreatePackage(RCString name, const vector<String>& nicks);
@@ -3034,7 +3041,15 @@ public:
 	}
 
 	void __fastcall Prog();
-	void __fastcall Progn(CP p);
+
+	inline void __fastcall Progn(CP p) {		// inline to save stack space
+		if (p) {
+			Push(p);
+			Prog();
+		} else
+			ClearResult();
+	}
+
 	void __fastcall PrognNoRec(CP p);
 
 
@@ -3077,7 +3092,7 @@ public:
 		return symWithFlags & FLAG_DYNAMIC ? Lisp().SwapIfDynSymVal(symWithFlags, v) : v;
 	}
 
-	void PushSymbols(CPackage *pack, DWORD& n);
+	void PushSymbols(CPackage *pack, UInt32& n);
 	void PrintValues(ostream& os);
 
 	// Special Operators
@@ -3094,11 +3109,11 @@ public:
 	void FinishFLet(CP *pTop, CP body);
 	CP SkipDeclarations(CP body);
 
-	CP BindLet(int n, CP& sym, CP form);
-	CP BindLetA(int n, CP& sym, CP form);
+	CP BindLet(size_t n, CP& sym, CP form);
+	CP BindLetA(size_t n, CP& sym, CP form);
 
 	bool CheckSetqBody(CP p);
-	CP BindSymbolMacrolet(int n, CP& sym, CP form);
+	CP BindSymbolMacrolet(size_t n, CP& sym, CP form);
 
 #if UCFG_LISP_DEBUGGER
 	// Debugger functions
@@ -3118,7 +3133,7 @@ public:
 #if UCFG_LISP_MACRO_AS_SPECIAL_OPERATOR
 	// Macros
 	void AndOr(bool bAnd);
-	CP BindVarMVB(int n, CP& sym, CP form);
+	CP BindVarMVB(size_t n, CP& sym, CP form);
 #endif
 
 	// Number Functions
@@ -3179,8 +3194,7 @@ public:
 
 
 	bool HeapedP(CP p) {
-		switch (Type(p))
-		{
+		switch (Type(p)) {
 		case TS_CHARACTER:
 		case TS_FIXNUM:
 		case TS_SUBR:
@@ -3502,7 +3516,7 @@ public:
 	class CPrintDispatchKeeper {
 	public:
 		CPrintDispatchKeeper(MFNPrintDispatch mfn)
-			:	m_mfn(SwapRet(Lisp().m_mfnPrintDispatch, mfn))
+			:	m_mfn(exchange(Lisp().m_mfnPrintDispatch, mfn))
 		{
 		}
 
@@ -3547,8 +3561,7 @@ public:
 
 	// Closures
 	bool ClosureP(CP p) {
-		switch (Type(p))
-		{
+		switch (Type(p)) {
 		case TS_INTFUNC:
 		case TS_CCLOSURE:
 			return true;
@@ -3611,7 +3624,7 @@ T *CValueMan<T, Tts>::CreateInstance(const String::Char *s) {
 	Lisp().SymNameByIdx(r-Base) = s;
 	return r;
 #else
-	return ::new(SwapRet(m_pHeap, (T*)((DWORD_PTR*)m_pHeap)[1])) T(s);
+	return ::new(exchange(m_pHeap, (T*)((DWORD_PTR*)m_pHeap)[1])) T(s);
 #endif
 }
 
@@ -3619,13 +3632,13 @@ template <class T, CTypeSpec Tts>
 T *CValueMan<T, Tts>::CreateInstance(const BigInteger& i) {
 	if (!m_pHeap)
 		Lisp().Collect();
-	return ::new(SwapRet(m_pHeap, (T*)((DWORD_PTR*)m_pHeap)[1])) T(i);
+	return ::new(exchange(m_pHeap, (T*)((DWORD_PTR*)m_pHeap)[1])) T(i);
 }	
 
 
 
 inline CIntFuncChain::CIntFuncChain(CIntFuncValue *p) {
-	m_prev = SwapRet(Lisp().m_pIntFuncChain, this);
+	m_prev = exchange(Lisp().m_pIntFuncChain, this);
 	m_p = p;
 }
 
@@ -3638,10 +3651,10 @@ inline CClosure::CClosureHeader& CClosure::get_Header() {
 	return *(CClosureHeader*)Lisp().AsArray(CodeVec)->m_pData;
 }
 
-inline LONG_PTR AsNumber(CP p) {
+inline intptr_t AsNumber(CP p) {
 	if (Type(p) != TS_FIXNUM)
 		LISP.E_TypeErr(p, S(L_FIXNUM));
-	return ((LONG_PTR)p >> VALUE_SHIFT);//!!!
+	return ((intptr_t)p >> VALUE_SHIFT);//!!!
 }
 
 inline byte AsBit(CP p) {
@@ -3668,7 +3681,7 @@ inline size_t CArrayValue::GetVectorLength() { return AsNumber(m_fillPointer ? m
 inline size_t CArrayValue::get_DataLength() { return AsNumber(m_dims); }
 
 inline size_t AsPositive(CP p) {
-	LONG_PTR n = AsNumber(p);
+	intptr_t n = AsNumber(p);
 	if (n < 0) {
 		CLispEng& lisp = Lisp();
 		lisp.Push(p);
@@ -3787,7 +3800,7 @@ public:
 	__forceinline void SetStackP(CLispEng& lisp) {
 		m_stackP = lisp.m_pStack;
 	}
-#endif
+#endif // UCFG_LISP_FRAME_AS_OFFSET
 
 	__forceinline void Finish(CLispEng& lisp, CFrameType frameType, CP *pTop) {
 		lisp.Push(lisp.CreateFrameInfo(frameType, pTop));
@@ -3874,7 +3887,7 @@ class CEnv5Frame : public CFrameBaseEx {
 public:
 	CEnv5Frame(CLispEng& lisp) {
 		*(CEnvironment*)(lisp.m_pStack-=5) = lisp.m_env;
-		//!!!memcpy(lisp.m_pStack-=5, &lisp.m_env, 5*sizeof(CP));//!!!
+		//!!! memcpy(lisp.m_pStack-=5, &lisp.m_env, 5*sizeof(CP));//!!!
 		Finish(lisp, FT_ENV5, lisp.m_pStack+5);
 	}
 
@@ -3891,7 +3904,7 @@ class CJmpBufBase : public CFrameBaseEx {
 public:
 	CJmpBufBase *m_pNext;
 
-	CJmpBufBase() { m_pNext = SwapRet(Lisp().m_pJmpBuf, this); }
+	CJmpBufBase() { m_pNext = exchange(Lisp().m_pJmpBuf, this); }
 	~CJmpBufBase() { 
 		CLispEng& lisp = Lisp();
 		lisp.m_pJmpBuf = m_pNext;
@@ -3952,12 +3965,13 @@ public:
 
 typedef CJmpBufBase CJmpBuf;
 
-class LispUnwindExc : public Exc {
+class LispUnwindExc : public Exception {
+	typedef Exception base;
 public:
 	CJmpBufBase *m_pFrame;
 
 	LispUnwindExc(CJmpBufBase *pFrame)
-		:	Exc(HR_UNWIND)		// this code ignored by Debugger in elrt for Fast Processing
+		:	base(HR_UNWIND)		// this code ignored by Debugger in elrt for Fast Processing
 		,	m_pFrame(pFrame)
 	{
 	}
@@ -4307,7 +4321,7 @@ public:
 class CStm {
 public:
 	CStm(CP stm)
-		:	m_stm(SwapRet(Lisp().m_stm, stm))
+		:	m_stm(exchange(Lisp().m_stm, stm))
 	{
 	}
 
@@ -4360,7 +4374,7 @@ public:
 	}
 };
 
-#endif
+#endif // UCFG_LISP_TAIL_REC
 
 
 #if UCFG_LISP_TAIL_REC == 0
@@ -4368,10 +4382,10 @@ public:
 #	define LISP_TAIL_REC_RESTORE
 #	define LISP_TAIL_REC_KEEPER(v)
 #elif UCFG_LISP_TAIL_REC == 1
-#	define LISP_TAIL_REC_DISABLE_1	CBoolKeeper trKeeper(m_bAllowTailRec, false);
-#	define LISP_TAIL_REC_RESTORE	m_bAllowTailRec = trKeeper.m_prev
+#	define LISP_TAIL_REC_DISABLE_1	CBoolKeeper trKeeper(m_bAllowTailRec.Ref(), false);
+#	define LISP_TAIL_REC_RESTORE	m_bAllowTailRec = trKeeper.m_prev;
 #	define LISP_TAIL_REC_ENABLED (m_bAllowTailRec)
-#	define LISP_TAIL_REC_KEEPER(v) CTailRecKeeper trKeeper(m_bAllowTailRec, v);
+#	define LISP_TAIL_REC_KEEPER(v) CTailRecKeeper trKeeper(m_bAllowTailRec.Ref(), v);
 #else
 #	define LISP_TAIL_REC_DISABLE_1
 #	define LISP_TAIL_REC_RESTORE	m_stackTailRec.back() = m_stackTailRec[m_stackTailRec.size()-2];

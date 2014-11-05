@@ -1,7 +1,6 @@
 #pragma once
 
 #include EXT_HEADER(list)
-#include EXT_HEADER_DYNAMIC_BITSET
 
 
 namespace Ext {
@@ -620,7 +619,6 @@ public:
 	}
 };
 
-UInt64 ToUInt64AtBytePos(const std::dynamic_bitset<byte>& bs, size_t pos);
 
 template <typename T, class L>
 T clamp(const T& v, const T& lo, const T& hi, L pred) {

@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -90,7 +83,7 @@ CJustify::~CJustify() {
 		lisp.JustifyEmpty();
 
 		sv = lisp.AsStream(lisp.m_stm);
-		DWORD nPos = SwapRet(sv->LinePosRef(), m_nPos);
+		DWORD nPos = exchange(sv->LinePosRef(), m_nPos);
 		sv->m_out = lisp.Spec(L_S_PRIN_JBSTRINGS);
 		sv->m_bMultiLine = m_bMultiLine;
 
@@ -98,7 +91,7 @@ CJustify::~CJustify() {
 		CP blocks = lisp.NReverse(lisp.Spec(L_S_PRIN_JBLOCKS));
 		lisp.Push(blocks);
 		if (m_bLinear) {
-			LONG_PTR need = 0;
+			intptr_t need = 0;
 			CP rm = 0;
 			for (CP car, b=blocks; lisp.SplitPair(b, car);)
 				if (ConsP(car))
@@ -422,8 +415,7 @@ void CLispEng::PrCons(CP p) {
 		 cdr = cons->m_cdr;
 	bool bL1 = ListLengthIs1(cdr);
 	int ind = 1;
-	switch (car)
-	{
+	switch (car) {
 	case S(L_QUOTE):
 		{
 			if (!bL1)
@@ -527,7 +519,7 @@ void CLispEng::PrVector(CP p) {
 		CParen paren;
 		CIndent ind(2);
 		CJustify j(1);
-		for (int i=0; i<len; i++) {
+		for (size_t i=0; i<len; ++i) {
 			if (i)
 				JustifySpace();
 			if (CheckLengthLimit(i >= lim) || CheckLinesLimit())
@@ -692,7 +684,7 @@ void CLispEng::PrCClosureCodeVector(CP p) {
 	size_t len = AsArray(p)->DataLength;
 	CIndent ind(len, "Y(");
 	CJustify j(1);
-	for (int i=0; i<len; i++) {
+	for (size_t i=0; i<len; ++i) {
 		if (i)
 			JustifySpace();
 		int el = AsIndex(AsArray(p)->GetElement(i));
@@ -769,8 +761,7 @@ void CLispEng::F_WriteUnreadable() {
 }
 
 void CLispEng::PrinObjectDispatch(CP p) {
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_SPECIALOPERATOR:
 		PrOtherObj(s_stSOInfo[AsIndex(p)].m_name, "SPECIAL-OPERATOR");
 		break;
@@ -901,14 +892,13 @@ void CLispEng::F_PPrintLogicalBlock() {
 
 void CLispEng::F_PPrintIndent() {
 	Call(S(L_ROUND), SV1);
-	LONG_PTR off = AsNumber(m_r);
+	intptr_t off = AsNumber(m_r);
 	CP indent = Spec(L_S_PRIN_INDENTATION);
 	m_r = 0;
 	Push(SV);
 	F_LinePosition();
 	CP linepos = m_r;
-	switch (SV2)
-	{
+	switch (SV2) {
 	case S(L_K_BLOCK):
 		if (PosFixNumP(indent))
 			off += AsNumber(indent);
@@ -921,7 +911,7 @@ void CLispEng::F_PPrintIndent() {
 		E_TypeErr(SV2, 0);
 	}
 	if (CastToPPStream(SV) && Spec(L_S_PRINT_PRETTY)) {
-		off = max(off, LONG_PTR(0));
+		off = max(off, intptr_t(0));
 		SetSpecial(S(L_S_PRIN_INDENTATION), CreateFixnum(off));
 		CStm sk(SV);
 		while (linepos++ < off)
@@ -934,8 +924,7 @@ void CLispEng::F_PPrintIndent() {
 
 void CLispEng::F_PPrintNewline() {
 	CP stm = TestOStream(SV);
-	switch (SV1)
-	{
+	switch (SV1) {
 	case S(L_K_LINEAR):
 	case S(L_K_FILL):
 	case S(L_K_MISER):
@@ -946,8 +935,7 @@ void CLispEng::F_PPrintNewline() {
 	}
 	if (CStreamValue *sv = CastToPPStream(stm))
 		if (Spec(L_S_PRINT_PRETTY)) {
-			switch (SV1)
-			{
+			switch (SV1) {
 			case S(L_K_MISER):
 				if (!Spec(L_S_PRIN_MISERP))
 					break;

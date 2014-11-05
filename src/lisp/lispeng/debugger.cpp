@@ -1,11 +1,8 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
+
+#if UCFG_WIN32
+#	include <el/libext/win32/ext-win.h>
+#endif
 
 #include "lispeng.h"
 
@@ -25,7 +22,7 @@ void CLispEng::StackOverflow() {
 	CArrayValue *av = ToArray(m_r);
 	CP symMacro = 0;
 	CP stm = *SymValue(AsSymbol(S(L_S_ERROR_OUTPUT)), 0, &symMacro);
-	for (int i=0; i<av->TotalSize(); i++) {
+	for (size_t i=0; i<av->TotalSize(); ++i) {
 		Push(av->GetElement(i));
 		Push(stm);
 		F_WriteChar();
@@ -119,11 +116,11 @@ CP CLispEng::GetCond(CP sym) {
 #endif
 	CP ar = Spec(L_S_CONDS);
 	if (Type(ar) != TS_ARRAY) {
-		Exc exc(E_LISP_NoConditionSystem);
+		Exception exc(E_LISP_NoConditionSystem);
 		exc.Data["Error"] = AsString(sym);
 		throw exc;
 	}
-	return Cdr(ToArray(ar)->GetElement(AsIndex(sym)-ENUM_L_CONDITION)); //!!! may be CDR?
+	return Cdr(ToArray(ar)->GetElement(AsIndex(sym) - ENUM_L_CONDITION)); //!!! may be CDR?
 }
 
 void CLispEng::Err(int idx) {
@@ -402,8 +399,7 @@ void CLispEng::PrintString(CP stm, RCString s) {
 }
 
 CP GetFuncName(CP p) {
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_INTFUNC: return Lisp().AsIntFunc(p)->m_name;
 	case TS_CCLOSURE: return Lisp().TheClosure(p).NameOrClassVersion;
 	default: Throw(E_FAIL);
@@ -431,8 +427,7 @@ size_t CLispEng::SizeOf(CP p, int level) {
 	int r = 0;
 	if (!level--)
 		return 0;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 		if (p)
 			return 8+SizeOf(Car(p), level)+SizeOf(Cdr(p), level);
@@ -487,9 +482,8 @@ void CLispEng::ShowInfo() {
 			if (*(byte*)sv != 0xFF)
 				if (CP func = sv->GetFun()) {
 					CProfInfo *pi = 0;
-loop:
-					switch (Type(func))
-					{
+LAB_LOOP:
+					switch (Type(func)) {
 					case TS_SUBR:
 						pi = &AsProfiled(func);
 						break;
@@ -501,7 +495,7 @@ loop:
 						break;
 					case TS_MACRO:
 						func = AsMacro(func)->m_expander;
-						goto loop;
+						goto LAB_LOOP;
 					case TS_SPECIALOPERATOR:
 						//!!!            pi = ToSpecialOperator(func);
 						break;
@@ -558,8 +552,7 @@ void CLispEng::F_FrameInfo() {
 		CFrameType ft = AsFrameType(*frame);
 		CP *pStackBeg = m_pStack;
 		Push(GetSymbol(g_arFrameTypeName[ft], m_packSYS));
-		switch (ft)
-		{
+		switch (ft) {
 		case FT_EVAL:
 		case FT_APPLY:
 			Push(frame[1]); break;
@@ -588,14 +581,12 @@ bool CLispEng::StackDownendP(CP *ps) {
 CP *CLispEng::TestFrameMove(CP *frame, size_t mode) {
 	if (Type(*frame) != TS_FRAMEINFO)
 		return 0;
-	switch (mode)
-	{
+	switch (mode) {
 	case 1:
 	case 2:
 		return frame;
 	case 3:
-		switch (AsFrameType(*frame))
-		{
+		switch (AsFrameType(*frame)) {
 		case FT_VAR:
 		case FT_FUN:
 		case FT_ENV1V:
@@ -605,16 +596,14 @@ CP *CLispEng::TestFrameMove(CP *frame, size_t mode) {
 		}
 		return 0;
 	case 4:
-		switch (AsFrameType(*frame))
-		{
+		switch (AsFrameType(*frame)) {
 		case FT_EVAL:
 		case FT_APPLY:
 			return frame;
 		}
 		return 0;
 	case 5:
-		switch (AsFrameType(*frame))
-		{
+		switch (AsFrameType(*frame)) {
 		case FT_APPLY:
 			return frame;
 		}
@@ -737,8 +726,7 @@ CEnvironment CLispEng::SameEnvAs() {
 	CEnvironment env;
 	for (CP *frame=ToFrame(Pop()); --frame!=m_pStack;) {
 		if (Type(*frame) == TS_FRAMEINFO) {
-			switch (AsFrameType(*frame))
-			{
+			switch (AsFrameType(*frame)) {
 			case FT_ENV1V:
 				AssignEnv(env.m_varEnv, frame[1]);
 				break;
@@ -808,13 +796,13 @@ void CLispEng::F_InvokeHandlers() {
 	CStackRange *other = m_pInactiveHandlers;
 	for (CP *frame=m_pStack; frame!=m_pStackTop;) {
 		if (other && frame==other->Low)
-			frame = SwapRet(other, other->Next)->High;
+			frame = exchange(other, other->Next)->High;
 		else if (Type(frame[0]) == TS_FRAMEINFO) {
 			if (AsFrameType(frame[0]) == FT_HANDLER) {
 				CP handlers = frame[FRAME_HANDLERS];
 				CArrayValue *vec = ToVector(Car(handlers));
 				size_t m2 = vec->GetVectorLength();
-				for (int i=0; i<m2; i+=2) {
+				for (size_t i=0; i<m2; i+=2) {
 					Call(S(L_SAFE_TYPEP), cond, AsArray(Car(handlers))->GetElement(i));
 					if (m_r) {
 						CHandlerKeeper handlerKeeper;
@@ -896,8 +884,7 @@ CP *CLispEng::PrintStackItem(CP *frame) {
 		return frame+1;
 	}
 	CP *top = AsFrameTop(frame);
-	switch (AsFrameType(*frame))
-	{
+	switch (AsFrameType(*frame)) {
 	case FT_EVAL:
 		WriteStr("EVAL frame for form ");
 		Prin1(frame[FRAME_FORM]);
@@ -1086,7 +1073,7 @@ struct CApplyPfnKeeper {
 void CLispEng::ApplyTraced(CP fun, ssize_t nArg) {
 	CTracedFuns::iterator it = m_tracedFuns.find(fun);
 	if (it != m_tracedFuns.end()) {
-		Keeper<CInt<int> > levelKeeper(m_traceLevel, m_traceLevel+1);
+		Keeper<int> levelKeeper(m_traceLevel, m_traceLevel+1);
 		CP name = it->second;
 		{
 			CApplyPfnKeeper applyKeeper;

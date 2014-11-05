@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -13,8 +6,7 @@ namespace Lisp {
 
 void CLispEng::F_NReverse() {
 	m_r = Pop();
-	switch (Type(m_r))
-	{
+	switch (Type(m_r)) {
 	case TS_CONS:
 		if (m_r)
 			m_r = NReverse(m_r);
@@ -42,8 +34,7 @@ void CLispEng::F_Vector(size_t nArgs) {
 }
 
 void CLispEng::F_Elt() {
-	switch (Type(SV1))
-	{
+	switch (Type(SV1)) {
 	case TS_CONS:
 		swap(SV, SV1);
 		F_NthCdr();
@@ -59,8 +50,7 @@ void CLispEng::F_Elt() {
 }
 
 void CLispEng::F_SetfElt() {
-	switch (Type(SV1))
-	{
+	switch (Type(SV1)) {
 	case TS_CONS:
 		swap(SV, SV1);
 		F_NthCdr();
@@ -84,8 +74,7 @@ void CLispEng::F_FindSeqType() {
 
 void CLispEng::F_GetSeqType() {
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 		Push(S(L_LIST));
 		break;
@@ -124,8 +113,7 @@ void CLispEng::F_GetTdCheckIndex() {
 }
 
 size_t CLispEng::SeqLength(CP seq) {
-	switch (Type(seq))
-	{
+	switch (Type(seq)) {
 	case TS_ARRAY: return ToVector(seq)->GetVectorLength();
 	case TS_CONS: return Length(seq);
 	default:
@@ -147,8 +135,7 @@ void CLispEng::F_Subseq() {
 	size_t len;
 	pair<size_t, size_t> pp = PopSeqBoundingIndex(SV2, len);
 	len = pp.second-pp.first;
-	switch (Type(SV))
-	{
+	switch (Type(SV)) {
 	case TS_ARRAY:
 		{
 			Push(SV);
@@ -156,7 +143,7 @@ void CLispEng::F_Subseq() {
 			Call(SeqMake(m_r), CreateFixnum((int)len));
 			CArrayValue *sar = AsArray(SV),
 				*dar = AsArray(m_r);
-			for (int i=0; i<len; i++)
+			for (size_t i=0; i<len; ++i)
 				dar->SetElement(i, sar->GetElement(pp.first+i));
 		}
 		break;
@@ -175,8 +162,7 @@ void CLispEng::F_Subseq() {
 }
 
 void CLispEng::SetSeqElt(CP rseq, CP& p, CP el) {
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FIXNUM:
 		{
 			size_t idx = AsIndex(p);
@@ -198,8 +184,7 @@ void CLispEng::F_ExpandDeftype() {
 	m_r = SV;
 	do {
 		CP sym = m_r;
-		switch (Type(m_r))
-		{
+		switch (Type(m_r)) {
 		case TS_SYMBOL:
 			break;
 		case TS_CONS:
@@ -223,11 +208,9 @@ void CLispEng::F_ValidType1() {
 	F_ExpandDeftype();
 	CP name = m_r;
 	CP c = 0;
-	switch (Type(name))
-	{
+	switch (Type(name)) {
 	case TS_SYMBOL:
-		switch (name)
-		{
+		switch (name) {
 		case S(L_NULL):
 			c = V_0;
 			name = S(L_LIST);
@@ -256,10 +239,8 @@ void CLispEng::F_ValidType1() {
 			CP name1 = Car(name);
 			if (Type(name1) == TS_SYMBOL) {
 				CP name2 = Cdr(name);
-				if (!name2 || ConsP(name2) && !(Cdr(name2)))
-				{
-					switch (name1)
-					{
+				if (!name2 || ConsP(name2) && !(Cdr(name2))) {
+					switch (name1) {
 					case S(L_SIMPLE_VECTOR):
 						name = S(L_VECTOR);
 						break;
@@ -305,8 +286,7 @@ void CLispEng::F_ValidType1() {
 								c = name3;
 						}
 						byte elType = name2==S(L_ASTERISK) ? ELTYPE_T : EltypeCode(name2);
-						switch (elType)
-						{
+						switch (elType) {
 						case ELTYPE_T:					name = S(L_VECTOR); break;
 						case ELTYPE_BIT:				name = V_1; break;
 						case ELTYPE_CHARACTER:	name = S(L_STRING); break;
@@ -370,7 +350,7 @@ void CLispEng::F_MakeSequence() {
 		m_r = CreateString(String(' ', size));
 		if (SV != V_U) {
 			CArrayValue *av = ToArray(m_r);
-			for (int i=0; i<size; i++)
+			for (size_t i=0; i<size; ++i)
 				av->SetElement(i, SV);
 		}
 		SkipStack(3);
@@ -386,7 +366,7 @@ void CLispEng::F_MakeSequence() {
 			Call(AsArray(td)->GetElement(11), SV1);
 			if (SV != V_U) {
 				CArrayValue *av = ToArray(m_r);
-				for (int i=0; i<size; i++)
+				for (size_t i=0; i<size; ++i)
 					av->SetElement(i, SV);
 			}
 			SkipStack(3);
@@ -396,7 +376,7 @@ void CLispEng::F_MakeSequence() {
 
 void CLispEng::F_Concatenate(size_t nArgs) {
 	size_t len = 0;
-	for (int i=0; i<nArgs; ++i) {
+	for (size_t i=0; i<nArgs; ++i) {
 		Push(m_pStack[i]);
 		F_Length();
 		len += AsNumber(m_r);
@@ -407,8 +387,7 @@ void CLispEng::F_Concatenate(size_t nArgs) {
 	CP p = (Type(m_r)==TS_ARRAY) ? V_0 : m_r;
 	for (int i=nArgs; i--;) {
 		CP seq = m_pStack[i];
-		switch (Type(seq))
-		{
+		switch (Type(seq)) {
 		case TS_CONS:
 			for (CP car; SplitPair(seq, car);)
 				SetSeqElt(m_r, p, car);
@@ -416,7 +395,7 @@ void CLispEng::F_Concatenate(size_t nArgs) {
 		case TS_ARRAY:
 			{
 				CArrayValue *av = AsArray(seq);
-				for (int i=0; i<av->GetVectorLength(); i++)
+				for (size_t i=0; i<av->GetVectorLength(); ++i)
 					SetSeqElt(m_r, p, av->GetElement(i));
 			}	
 			break;
@@ -432,8 +411,7 @@ void CLispEng::F_MapInto(size_t nArgs) {
 	CP seq = pStack[1];
 	pStack[0] = FromFunctionDesignator(pStack[0]);
 	size_t len;
-	switch (Type(seq))
-	{
+	switch (Type(seq)) {
 	case TS_ARRAY:
 		len = ToVector(seq)->DataLength;
 		break;
@@ -443,14 +421,14 @@ void CLispEng::F_MapInto(size_t nArgs) {
 	default:
 		E_TypeErr(seq, S(L_SEQUENCE));
 	}
-	for (int i=1; i<=nArgs; i++) {
+	for (int i=1; i<=(int)nArgs; ++i) {
 		CP p = pStack[-i];
 		len = min(len, SeqLength(p));
 		Push(Type(p)==TS_ARRAY ? V_0 : p);
 	}
 	CP dst = Type(seq)==TS_ARRAY ? V_0 : seq;
 	for (size_t j=0; j<len; j++) {
-		for (int i=1; i<=nArgs; i++) {
+		for (int i=1; i<=(int)nArgs; i++) {
 			CP& src = pStack[-(int)nArgs-i];
 			CP val;
 			if (Type(src) == TS_FIXNUM) {
@@ -483,8 +461,7 @@ void CLispEng::F_MapInto(size_t nArgs) {
 }
 
 CP CLispEng::DoSeqAccess(CP seq, CP ptr) {
-	switch (Type(seq))
-	{
+	switch (Type(seq)) {
 	case TS_CONS: return Car(ptr);
 	case TS_ARRAY: return AsArray(seq)->GetElement(AsIndex(ptr));
 	default:
@@ -493,8 +470,7 @@ CP CLispEng::DoSeqAccess(CP seq, CP ptr) {
 }
 
 void CLispEng::DoSeqSetAccess(CP seq, CP ptr, CP v) {
-	switch (Type(seq))
-	{
+	switch (Type(seq)) {
 	case TS_CONS:
 		if (!ptr)
 			E_Error();
@@ -521,8 +497,7 @@ CP CLispEng::DoVectorFeUpdate(CP ptr) {
 }
 
 CLispEng::FPSeqUpdate CLispEng::GetSeqUpdate(CP seq) {
-	switch (Type(seq))
-	{
+	switch (Type(seq)) {
 	case TS_CONS: return &CLispEng::DoListUpdate;
 	case TS_ARRAY: return &CLispEng::DoVectorUpdate;
 	default:
@@ -531,8 +506,7 @@ CLispEng::FPSeqUpdate CLispEng::GetSeqUpdate(CP seq) {
 }
 
 CLispEng::FPSeqUpdate CLispEng::GetSeqFeUpdate(CP seq) {
-	switch (Type(seq))
-	{
+	switch (Type(seq)) {
 	case TS_CONS: return &CLispEng::DoListUpdate;
 	case TS_ARRAY: return &CLispEng::DoVectorFeUpdate;
 	default:
@@ -559,7 +533,7 @@ void CLispEng::ProcessSeq(CP seq, CP fromEnd, CP start, CP end, CP count, CP key
 		}
 		break;
 	case TS_FIXNUM:
-		cnt = max(LONG_PTR(0), AsNumber(count));  //!!!O
+		cnt = max(intptr_t(0), AsNumber(count));  //!!!O
 		break;
 	case TS_CONS:
 		if (!count)

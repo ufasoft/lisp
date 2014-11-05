@@ -425,7 +425,9 @@ private:
 //#	undef NS
 #endif
 
-
+#if !UCFG_STDSTL
+#	include <el/stl/array>
+#endif
 
 
 #if UCFG_STDSTL && UCFG_USE_REGEX && !UCFG_CPP11_HAVE_REGEX
@@ -729,6 +731,9 @@ inline size_t hash_value(const Ext::ConstBuf& mb) {
 }
 }
 
+#ifndef _GLIBCXX_USE_NOEXCEPT		//!!!?
+#	define _GLIBCXX_USE_NOEXCEPT
+#endif
 
 //!!! #if UCFG_WDM
 
@@ -753,8 +758,8 @@ inline void * __cdecl operator new[](size_t sz) {
 #else
 
 void * __cdecl operator new(size_t sz);
-void __cdecl operator delete(void *p);
-void __cdecl operator delete[](void* p);
+void __cdecl operator delete(void *p) _GLIBCXX_USE_NOEXCEPT;
+void __cdecl operator delete[](void* p) _GLIBCXX_USE_NOEXCEPT;
 void * __cdecl operator new[](size_t sz);
 
 #endif // UCFG_DEFINE_NEW
@@ -856,18 +861,6 @@ namespace ww {
     };
 }
 
-#ifndef NDEBUG
-#   define StaticAssert(test, errormsg)                         \
-    do {                                                        \
-        struct ERROR_##errormsg {};                             \
-        typedef ww::compile_time_check< (test) != 0 > tmplimpl; \
-        tmplimpl aTemp = tmplimpl(ERROR_##errormsg());          \
-        sizeof(aTemp);                                          \
-    } while (0)
-#else
-#   define StaticAssert(test, errormsg)                         \
-    do {} while (0)
-#endif
 
 
 

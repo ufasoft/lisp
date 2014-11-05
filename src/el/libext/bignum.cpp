@@ -85,6 +85,14 @@ BigInteger::BigInteger(int n)
 {
 }
 
+#	if LONG_MAX==0x7fffffff
+BigInteger::BigInteger(long n)
+	:	m_zz(n)
+{
+}
+#	endif
+
+
 void BigInteger::Init(const byte *p, size_t count) {
 	if (p[count-1] < 0x80)
 		::mpz_import(m_zz.get_mpz_t(), count, -1, 1, -1, 0, p);
