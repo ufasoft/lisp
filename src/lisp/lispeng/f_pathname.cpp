@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -36,6 +29,28 @@ CP CLispEng::ToDefaultPathname(CP p) {
 	return m_r;
 }
 
+static wregex s_reUrl(L"^(?:([A-Za-z0-9-]+)://([.A-Za-z0-9-]+(?::(\\d+))?))"			// proto - 1   host - 2   port - 3
+	L"(/[/.A-Za-z0-9-]+)?"											// dir - 4
+	L"([^/\\s]+)?");													// name - 5
+
+
+static String sReNonUrl =
+#if UCFG_USE_POSIX
+"(?:([A-Za-z0-9-]+)(:))?"
+"([^:]+/)?"
+"(?:([^:/]+)\\.([^\\.:/]+)"
+"|([^:/]+))?";
+#else
+"^(?:\\\\\\\\([^\\\\]+)\\\\)?"						// host - 1
+"(?:([A-Za-z]):)?"									// dev - 2
+"([^:;]*(?:/|\\\\))?"								// dir - 3	
+"(?:([^:;/\\\\]+)\\.([^\\.:;/]+)"					// name - 4   type - 5
+"|([^:;/\\\\]+))?";									// onlyname - 6
+#endif
+
+static wregex s_reNonUrl(sReNonUrl),
+	s_reNonUrlTerminated(sReNonUrl + "$");
+
 void CLispEng::F_ParseNamestring() {
 	bool bJunkAllowed = ToOptionalNIL(Pop());
 	SV1 = ToOptional(SV1, V_0);
@@ -56,8 +71,7 @@ void CLispEng::F_ParseNamestring() {
 	pair<size_t, size_t> pp;
 	String s;
 	size_t len, lenRecognized = 0;
-	switch (Type(thing))
-	{
+	switch (Type(thing)) {
 	case TS_PATHNAME:
 		SV = thing;
 		break;
@@ -73,7 +87,7 @@ void CLispEng::F_ParseNamestring() {
 			s = AsString(thing);
 			pp = PopSeqBoundingIndex(thing, len);
 			Push(CreateFixnum(pp.first), CreateFixnum(pp.second));
-			s = s.Mid(pp.first, pp.second-pp.first);
+			s = s.substr(pp.first, pp.second-pp.first);
 
 			if (bLogical) {
 				String sRe = "^(?:([A-Z0-9-]*):)?"  								// host - 1								allows ":" for CLISP
@@ -91,15 +105,15 @@ void CLispEng::F_ParseNamestring() {
 						   name = m[3],
 						   type = m[4],
 						   version = m[5];
-					Push(host.IsEmpty() ? 0 : CreateString(host));
-					if (dir.IsEmpty())
+					Push(host.empty() ? 0 : CreateString(host));
+					if (dir.empty())
 						Push(0);
 					else {
 						vector<String> v = dir.Split(";");
 						if (v.size() > 1)
 							v.resize(v.size()-1);		//!!!?
 						Push(v[0]=="" ? S(L_K_RELATIVE) : S(L_K_ABSOLUTE));
-						for (int i=0; i<v.size(); ++i) {
+						for (size_t i=0; i<v.size(); ++i) {
 							String c = v[i];
 							if (c != "") {
 								if (c == "**")
@@ -112,9 +126,9 @@ void CLispEng::F_ParseNamestring() {
 						}
 						Push(Listof(v.size()));
 					}
-					Push(name.IsEmpty() ? 0 : name=="*" ? S(L_K_WILD) : CreateString(name));
-					Push(type.IsEmpty() ? 0 : type=="*" ? S(L_K_WILD) : CreateString(type));
-					Push(version.IsEmpty() ? 0 : version=="*" ? S(L_K_WILD)
+					Push(name.empty() ? 0 : name=="*" ? S(L_K_WILD) : CreateString(name));
+					Push(type.empty() ? 0 : type=="*" ? S(L_K_WILD) : CreateString(type));
+					Push(version.empty() ? 0 : version=="*" ? S(L_K_WILD)
 								 							  : version == "NEWEST" || version == "newest" ?  S(L_K_NEWEST)
 															                                               : CreateInteger(atoi(version)));
 					CPathname *pn = m_pathnameMan.CreateInstance();
@@ -129,30 +143,27 @@ void CLispEng::F_ParseNamestring() {
 				} else
 					E_ParseErr();
 			} else {
-            	wregex reUrl(L"^(?:([A-Za-z0-9-]+)://([.A-Za-z0-9-]+(?::(\\d+))?))"			// proto - 1   host - 2   port - 3
-                           L"(/[/.A-Za-z0-9-]+)?"											// dir - 4
-                           L"([^/\\s]+)?");													// name - 5
 				Smatch m;
-               	if (regex_search(s, m, reUrl)) {
+               	if (regex_search(s, m, s_reUrl)) {
 					String proto = m[1],
                            host = m[2],
 						   port = m[3],
                            dir = m[4],
                            name = m[5];
-                    if (!proto.IsEmpty()) {
+                    if (!proto.empty()) {
 					    Push(CreateString(proto));
 					    Push(CreateString(host));
 						Push(Listof(2));
 					} else
 						Push(0);
-					Push (port.IsEmpty() ? 0 : CreateString(port));
+					Push (port.empty() ? 0 : CreateString(port));
 
 					vector<String> v = dir.Split(";");
 					Push(S(L_K_ABSOLUTE));
 					int count = 1;
-					for (int i=1; i<v.size(); ++i) {
+					for (size_t i=1; i<v.size(); ++i) {
 						String s = v[i];
-						if (!s.IsEmpty()) {
+						if (!s.empty()) {
 							++count;
 							Push(CreateString(s));
 						}
@@ -166,24 +177,8 @@ void CLispEng::F_ParseNamestring() {
 					SV = FromSValue(pn);
 					lenRecognized = m.length();
 				} else {
-					String sRe = 
-#if UCFG_USE_POSIX
-					"(?:([A-Za-z0-9-]+)(:))?"						
-					"([^:]+/)?"										
-					"(?:([^:/]+)\\.([^\\.:/]+)"						
-					"|([^:/]+))?";									
-#else
-					"^(?:\\\\\\\\([^\\\\]+)\\\\)?"						// host - 1
-					"(?:([A-Za-z]):)?"									// dev - 2
-					"([^:;]*(?:/|\\\\))?"								// dir - 3	
-					"(?:([^:;/\\\\]+)\\.([^\\.:;/]+)"					// name - 4   type - 5
-					"|([^:;/\\\\]+))?";									// onlyname - 6
-#endif
-					if (!bJunkAllowed)
-						sRe += "$";
-					wregex re(sRe);
 					Smatch m;
-               		if (regex_search(s, m, re)) {
+               		if (regex_search(s, m, bJunkAllowed ? s_reNonUrl : s_reNonUrlTerminated)) {
 						String host = m[1],
 	#if !UCFG_USE_POSIX
 							   dev = m[2],
@@ -194,26 +189,26 @@ void CLispEng::F_ParseNamestring() {
 							   onlyname = m[6],
 							   type = m[5];
 
-						if (name.IsEmpty())
+						if (name.empty())
 							name = onlyname;
 
 					
-						Push(host.IsEmpty() ? 0 : host=="?" || host=="."
+						Push(host.empty() ? 0 : host=="?" || host=="."
 	                                                   ? S(L_K_UNSPECIFIC)
 	                                                   : CreateString(host));
 	#if UCFG_USE_POSIX
 						Push(S(L_K_UNSPECIFIC));
 	#else
-						Push(dev.IsEmpty() ? 0 : CreateString(dev));
+						Push(dev.empty() ? 0 : CreateString(dev));
 	#endif
 
-						if (dir.IsEmpty())
+						if (dir.empty())
 							Push(0);
 						else {
-							vector<String> v = dir.Split(String(Path::DirectorySeparatorChar) + String(Path::AltDirectorySeparatorChar));
+							vector<String> v = dir.Split(String(path::preferred_separator) + String(Path::AltDirectorySeparatorChar));
 							Push(v[0]!="" ? S(L_K_RELATIVE) : S(L_K_ABSOLUTE));
 							int count = 1;
-							for (int i=0; i<v.size(); ++i) {							
+							for (size_t i=0; i<v.size(); ++i) {							
 								String c = v[i];
 								if (c != "") {
 									if (c == "**")
@@ -229,8 +224,8 @@ void CLispEng::F_ParseNamestring() {
 							}
 							Push(Listof(count));
 						}
-						Push(name.IsEmpty() ? 0 : name=="*" ? S(L_K_WILD) : CreateString(name));
-						Push(type.IsEmpty() ? 0 : type=="*" ? S(L_K_WILD) : CreateString(type));
+						Push(name.empty() ? 0 : name=="*" ? S(L_K_WILD) : CreateString(name));
+						Push(type.empty() ? 0 : type=="*" ? S(L_K_WILD) : CreateString(type));
 
 						CPathname *pn = m_pathnameMan.CreateInstance();
 						pn->m_ver = S(L_K_UNSPECIFIC);
@@ -268,8 +263,8 @@ void CLispEng::F_ParseNamestring() {
 	SkipStack(5);
 }
 
-CP CLispEng::CreatePathname(RCString path) {
-	Push(CreateString(path), V_U, V_U, V_U, V_U, V_U);
+CP CLispEng::CreatePathname(const path& p) {
+	Push(CreateString(p.native()), V_U, V_U, V_U, V_U, V_U);
 	F_ParseNamestring();
 	m_cVal = 1;
 	return m_r;	
@@ -296,8 +291,7 @@ void CLispEng::F_PathnameFieldEx() {
 	int idx = AsNumber(Pop());
 	if (pathname) {
 		CPathname *pn = ToPathname(pathname);
-		switch (idx)
-		{
+		switch (idx) {
 		case 0:
 			m_r = pn->m_host;
 			break;
@@ -329,7 +323,7 @@ void CLispEng::E_PathnameErr(CP datum) {
 CLispEng::EStringCase CLispEng::StringCase(RCString s) {
 	int bHasLower = false;
 	int bHasUpper = false;
-	for (int i=0, len=s.Length; i<len; ++i) {
+	for (int i=0, len=s.length(); i<len; ++i) {
 		wchar_t ch = s[i];
 		bHasLower |= iswlower(ch);
 		bHasUpper |= iswupper(ch);
@@ -457,39 +451,37 @@ void CLispEng::F_CD() {
 	if (SV == V_U)
 		SV = CreateString("");
 	F_Pathname();
-#if !UCFG_WCE
 	Call(S(L_NAMESTRING), m_r);
-	Directory::SetCurrentDirectory(AsString(m_r));
-	Push(CreateString(Directory::GetCurrentDirectory()));
+	current_path(AsString(m_r));
+	Push(CreateString(current_path()));
 	F_Pathname();
-#endif	
 	SetSpecial(S(L_S_DEFAULT_PATHNAME_DEFAULTS), m_r);
 }
 
-String CLispEng::FromPathnameDesignator(CP p) {
+path CLispEng::FromPathnameDesignator(CP p) {
 	Push(m_r);
 	Call(S(L_MERGE_PATHNAMES), p);
-	return ToPathname(SwapRet(m_r, Pop()))->ToString();
+	return ToPathname(exchange(m_r, Pop()))->ToString();
 }
 
 void CLispEng::F_Truename() {
-	String truename;
+	path truename;
 	if (Type(SV) == TS_STREAM)
 		truename = AsStream(SV)->TrueName;
 	else {
 		try {
-			String spath = FromPathnameDesignator(SV);
+			path spath = FromPathnameDesignator(SV);
 			truename = Path::GetTruePath(spath);
-			if (!spath.IsEmpty()) {
-				wchar_t ch = spath[spath.Length-1];
-				if (ch==Path::DirectorySeparatorChar || ch==Path::AltDirectorySeparatorChar || Directory::Exists(truename))
+			if (!spath.empty()) {
+				wchar_t ch = spath.native()[spath.native().size()-1];
+				if (ch==path::preferred_separator || ch==Path::AltDirectorySeparatorChar || is_directory(truename))
 					truename = AddDirSeparator(truename);
 			}
-		} catch (RCExc e) {
-			E_FileErr(e.HResult, e.Message, SV);
+		} catch (RCExc ex) {
+			E_FileErr(HResultInCatch(ex), ex.what(), SV);
 		}
 	}
-	if (truename.IsEmpty())
+	if (truename.empty())
 		m_r = 0;
 	else
 		m_r = CreatePathname(truename);
@@ -498,16 +490,15 @@ void CLispEng::F_Truename() {
 
 void CLispEng::F_ProbePathname() {
 	CP pn = SV;
-	String path = FromPathnameDesignator(pn);
+	path p = FromPathnameDesignator(pn);
 
 #ifdef X_DEBUG//!!!D
 	cerr << "====F_ProbePathname===  " << path << endl;
 #endif		
 
-	if (File::Exists(path)) {
-		FileInfo fi(path);
-		Push(CreateInteger64(fi.Length));
-		Push(ToUniversalTime(fi.get_LastWriteTime()));
+	if (is_regular_file(p)) {
+		Push(CreateInteger64(file_size(p)));
+		Push(ToUniversalTime(last_write_time(p)));
 
 #ifdef X_DEBUG//!!!D
 		String bt = ToPathname(pn)->ToString();
@@ -530,10 +521,9 @@ void CLispEng::F_ProbePathname() {
 #ifdef X_DEBUG//!!!D
 		cerr << "====F_ProbePathname: after copy===  " << ppn->ToString() << endl;
 #endif		
-	} else if (Directory::Exists(path)) {
-		DirectoryInfo di(path);
+	} else if (is_directory(p)) {
 		Push(0);
-		Push(ToUniversalTime(di.get_LastWriteTime()));
+		Push(ToUniversalTime(last_write_time(p)));
 
 		Push(pn);
 		F_Truename();
@@ -555,7 +545,7 @@ void CLispEng::F_ProbePathname() {
 	SkipStack(1);
 }
 
-String CPathname::ToString(bool bWithoutNameExt) {
+path CPathname::ToString(bool bWithoutNameExt) {
 	CLispEng& lisp = Lisp();
 	ostringstream os;
 	if (m_dev && m_dev!=S(L_K_UNSPECIFIC))
@@ -564,7 +554,7 @@ String CPathname::ToString(bool bWithoutNameExt) {
 		CP dir = m_dir, p;
 		if (lisp.SplitPair(dir, p)) {
 			if (p == S(L_K_ABSOLUTE))
-				os << String(Path::DirectorySeparatorChar);
+				os << String(path::preferred_separator);
 			while (lisp.SplitPair(dir, p)) {
 				String s;
 				if (p == S(L_K_WILD))
@@ -575,7 +565,7 @@ String CPathname::ToString(bool bWithoutNameExt) {
 					s = "..";
 				else
 					s = AsString(p);
-				os << s << String(Path::DirectorySeparatorChar);
+				os << s << String(path::preferred_separator);
 			}
 		}
 	}

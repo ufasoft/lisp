@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -39,7 +32,7 @@ const CLispEng::CCharDispatcher CLispEng::s_arSharpDispatcher[] = {
 
 void CLispEng::CopyReadtable(CReadtable *from, CReadtable *to) {
 	*to = *from;
-	for (int i=0; i<_countof(from->m_ar); i++)
+	for (int i=0; i<size(from->m_ar); i++)
 		to->m_ar[i].m_disp = CopyList(from->m_ar[i].m_disp);
 	for (CReadtable::CCharMap::iterator it=from->m_map.begin(); it!=from->m_map.end(); ++it)
 		to->m_map[it->first].m_disp = CopyList(it->second.m_disp);
@@ -94,18 +87,18 @@ void CLispEng::InitReader() {
 	rt->m_ar['_'].m_traits |= TRAIT_EXTENSION;
 
 	int i;
-	for (i=0; i<_countof(s_arMacroChar); i++) {
+	for (i=0; i<size(s_arMacroChar); i++) {
 		const CCharDispatcher& d = s_arMacroChar[i];
 		rt->m_ar[d.m_ch].m_syntax = ST_MACRO;
 		rt->m_ar[d.m_ch].m_bTerminating = true;
 		rt->m_ar[d.m_ch].m_macro = FindSubr(d.m_fn, 2, 0, 0);
 	}
 	rt->m_ar['#'].m_bTerminating = false;
-	for (i=0; i<_countof(s_arSharpDispatcher); i++) {
+	for (i=0; i<size(s_arSharpDispatcher); i++) {
 		const CCharDispatcher& d = s_arSharpDispatcher[i];
 		Push(CreateChar(d.m_ch), FindSubr(d.m_fn, 3, 0, 0));
 	}
-	rt->m_ar['#'].m_disp = Listof(_countof(s_arSharpDispatcher)*2);
+	rt->m_ar['#'].m_disp = Listof(size(s_arSharpDispatcher)*2);
 
 	rt->m_case = S(L_K_UPCASE);
 
@@ -153,7 +146,7 @@ void CLispEng::F_SetfReadtableCase() {
 CCharType CLispEng::GetCharType(wchar_t ch, CReadtable *rt) {
 	if (!rt)
 		rt = GetReadtable();
-	if (ch < _countof(rt->m_ar))
+	if (ch < size(rt->m_ar))
 		return rt->m_ar[ch];
 	CCharType ct;
 	if (Lookup(rt->m_map, ch, ct))
@@ -178,7 +171,7 @@ void CLispEng::F_SetMacroCharacter() {
 	CCharType ct = GetCharType(ch, rt);
 	ct.m_macro = FromFunctionDesignator(SV2);
 	ct.m_bTerminating = SV1 && SV1!=V_U;
-	if (ch < _countof(rt->m_ar))
+	if (ch < size(rt->m_ar))
 		rt->m_ar[ch] = ct;
 	else
 		rt->m_map[ch] = ct;
@@ -217,7 +210,7 @@ void CLispEng::F_SetDispatchMacroCharacter() {
 	else
 		Remf(ct.m_disp, SV2);
 	rt = FromReadtableDesignator(SV);
-	if (dispCh < _countof(rt->m_ar))
+	if (dispCh < size(rt->m_ar))
 		rt->m_ar[dispCh] = ct;
 	else
 		rt->m_map[dispCh] = ct;
@@ -262,8 +255,8 @@ CP CLispEng::ToInteger(const CTokenVec& vec, int readBase) {
 
 String CLispEng::TokenToString(CTokenVec& vec) {
 	String s(' ', vec.size());
-	for (int i=0; i<vec.size(); i++)
-		s.SetAt(i, (String::Char)vec[i].m_ch);
+	for (size_t i=0; i<vec.size(); ++i)
+		s.SetAt(i, (String::value_type)vec[i].m_ch);
 	return s;
 }
 
@@ -302,7 +295,7 @@ void CLispEng::F_CharType() {
 	CReadtable *rt = ToReadtable(p==V_U ? Spec(L_S_READTABLE) : p);
 	wchar_t ch = AsChar(Pop());
 	m_cVal = 2;
-	if (ch < _countof(rt->m_ar)) {
+	if (ch < size(rt->m_ar)) {
 		if (rt->m_ar[ch].m_syntax == ST_MACRO)
 			m_r = rt->m_ar[ch].m_macro;
 		else
@@ -344,8 +337,7 @@ CLispEng::CTokenVec CLispEng::ReadExtendedToken(CP stm, bool bSescape, bool bPre
 			bSescape = false;
 		} else {
 			CCharType ct = GetCharType(ch);
-			switch (ct.m_syntax)
-			{
+			switch (ct.m_syntax) {
 			case ST_SESCAPE:
 				vec.HasEscapes = true;
 				bSescape = true;
@@ -358,8 +350,7 @@ CLispEng::CTokenVec CLispEng::ReadExtendedToken(CP stm, bool bSescape, bool bPre
 				if (bMode)
 					vec.push_back(CCharWithAttrs(ch, false, TRAIT_ALPHABETIC));
 				else
-					switch (ct.m_syntax)
-					{
+					switch (ct.m_syntax) {
 						case ST_INVALID:
 							E_Error();
 						case ST_WHITESPACE:
@@ -386,7 +377,7 @@ tokenComplete:
 	if (cas == S(L_K_INVERT)) {
 		bool bUpper = false,
 			bLower = false;
-		for (int i=0; i<vec.size(); i++) {
+		for (size_t i=0; i<vec.size(); ++i) {
 			CCharWithAttrs& ca = vec[i];
 			if (ca.m_bReplaceable) {
 				CP ch = CreateChar(ca.m_ch);
@@ -411,7 +402,7 @@ tokenComplete:
 	}
 	if (cas==S(L_K_UPCASE) || cas==S(L_K_DOWNCASE)) {
 		FPLispFunc pfn = cas==S(L_K_UPCASE) ? &CLispEng::F_CharUpcase : &CLispEng::F_CharDowncase;
-		for (int i=0; i<vec.size(); i++) {
+		for (size_t i=0; i<vec.size(); ++i) {
 			CCharWithAttrs& ca = vec[i];
 			if (ca.m_bReplaceable) {
 				Push(CreateChar(ca.m_ch));
@@ -425,7 +416,7 @@ out:
 }
 
 bool CLispEng::OnlyDotsOrEmpty(CTokenVec& vec) {
-	for (int i=0; i<vec.size(); i++)
+	for (size_t i=0; i<vec.size(); ++i)
 		if (!(vec[i].m_traits & TRAIT_DOT))
 			return false;
 	return true;
@@ -437,10 +428,10 @@ bool CLispEng::PotentialNumberP(CTokenVec& vec, CP pbase) {
 	int base = AsNumber(pbase);
 	bool bHasPoint = false,
 		bHasDigit = false;
-	int i;
-	for (i=0; i<vec.size() && !(bHasPoint = vec[i].m_traits & TRAIT_POINT); i++)
+	size_t i;
+	for (i=0; i<vec.size() && !(bHasPoint = vec[i].m_traits & TRAIT_POINT); ++i)
 		;
-	for (i=0; i<vec.size(); i++) {
+	for (i=0; i<vec.size(); ++i) {
 		CCharWithAttrs& ca = vec[i];
 		if (ca.m_traits & TRAIT_ALPHADIGIT) {
 			wchar_t ch = ca.m_ch;
@@ -513,8 +504,7 @@ CP CLispEng::ReadToken(CP stm, bool bPreservingWhitespace) {
 		}
 	}
 	if (OnlyDotsOrEmpty(vec)) {
-		switch (vec.size())
-		{
+		switch (vec.size()) {
 		case 0:
 			goto LAB_NOT_DOTS;
 		case 1:
@@ -583,8 +573,7 @@ CP CLispEng::ReadSValue(CP stm, bool bEofError, CP eofVal, bool bRec, bool bPres
 				break;
 		wchar_t ch = (wchar_t)ich;
 		CCharType ct = GetCharType(ch);
-		switch (ct.m_syntax)
-		{
+		switch (ct.m_syntax) {
 		case ST_WHITESPACE:
 			continue;
 		case ST_CONSTITUENT:
@@ -623,18 +612,17 @@ CP CLispEng::ReadRec(CP stm) {
 	return ReadSValue(stm);/// (read t nil t);
 }
 
-class ReadLabelExc : public Exc {
+class ReadLabelExc : public Exception {
 public:
 	ReadLabelExc()
-		:	Exc(E_LISP_ReadLabel)
+		:	Exception(E_LISP_ReadLabel)
 	{}
 };
 
 void CLispEng::ApplyRefs(CP& place, bool bMark) {
 LAB_START:
 	CP p = place & ~FLAG_Mark;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 	case TS_ARRAY:
 	case TS_OBJECT:
@@ -677,9 +665,8 @@ LAB_START:
 }
 
 void CLispEng::ApplyRefsSValue(CP& p, bool bMark) {
-	DWORD_PTR idx = AsIndex(p);
-	switch (Type(p))
-	{
+	uintptr_t idx = AsIndex(p);
+	switch (Type(p)) {
 	case TS_CONS:
 		{
 			CConsValue *cons = m_consMan.TryApplyCheck(idx);
@@ -694,7 +681,7 @@ void CLispEng::ApplyRefsSValue(CP& p, bool bMark) {
 			CArrayValue *av = m_arrayMan.TryApplyCheck(idx);
 			if (!(av->m_flags & FLAG_Displaced) && av->m_elType==ELTYPE_T) {
 				size_t size = av->TotalSize();
-				for (int i=0; i<size; i++)
+				for (size_t i=0; i<size; ++i)
 					ApplyRefs(av->m_pData[i], bMark); 
 			}
 		}
@@ -909,11 +896,11 @@ void CLispEng::F_M_Quote() {
 }
 
 void CLispEng::F_M_DQuote() {
-	vector<String::Char> vec;
+	vector<String::value_type> vec;
 	for (int chTerm=AsChar(SV), ch; (ch=ReadChar(SV1))!=chTerm;) {
 		if (ch == '\\')
 			ch = ReadChar(SV1);
-		vec.push_back((String::Char)ch);
+		vec.push_back((String::value_type)ch);
 	}
 	m_r = CreateString(vec.empty() ? String() : String(&vec[0], vec.size()));
 	SkipStack(2);
@@ -932,8 +919,7 @@ void CLispEng::F_M_Comma() {
 	SkipStack(1);
 	int ch = ReadChar(SV);
 	CSPtr q; //!!!
-	switch (ch)
-	{
+	switch (ch) {
 	case '@':
 		q = S(L_SPLICE);
 		break;
@@ -963,8 +949,7 @@ void CLispEng::F_Sharp_VerticalBar() {
 	CheckNilInfix(SV, SV2);
 	CP stm = SV2;
 	while (true) {
-		switch (int ch = ReadChar(stm))
-		{
+		switch (int ch = ReadChar(stm)) {
 		case '|':
 			ch = ReadChar(stm);
 			if (ch == '#') {
@@ -1039,8 +1024,7 @@ bool CLispEng::InterpretFeature(CP p) {
 	CP car;
 	if (!SplitPair(p, car))
 		E_Error();
-	switch (car)
-	{
+	switch (car) {
 	case S(L_K_NOT):
 		return !InterpretFeature(Car(p));
 	case S(L_K_AND):
@@ -1109,14 +1093,14 @@ void CLispEng::F_Sharp_Asterisk() {
 				E_Error();
 		} else
 			n = vec.size();
-		int i;
-		for (i=0; i<vec.size(); i++) {
+		size_t i;
+		for (i=0; i<vec.size(); ++i) {
 			CCharWithAttrs& cwa = vec[i];
 			if (!(cwa.m_traits & TRAIT_ALPHADIGIT) || cwa.m_ch!='0' && cwa.m_ch!='1')
 				E_Error();
 		}
 		CArrayValue *av = CreateVector(n, ELTYPE_BIT);
-		for (i=0; i<n; i++)
+		for (i=0; i<n; ++i)
 			av->SetElement(i, CreateFixnum((i<vec.size() ? vec[i] : vec.back()).m_ch-'0'));
 		m_r = FromSValue(av);
 	}
@@ -1196,7 +1180,7 @@ void CLispEng::F_MakeClosure() {
 	if (ToArray(c->CodeVec)->GetElementType() == ELTYPE_T) {
 		CArrayValue *oav = AsArray(c->CodeVec),
 			*nav = CreateVector(oav->DataLength, ELTYPE_BYTE);
-		for (int i=0; i<oav->DataLength; i++) {
+		for (size_t i=0; i<oav->DataLength; ++i) {
 			LONG_PTR v = AsNumber(oav->GetElement(i));
 #ifdef X_DEBUG//!!!D
 			if (v == 0x83)
@@ -1215,8 +1199,7 @@ void CLispEng::F_Sharp_Y() {
 	SkipStack(3);
 	if (arg) {
 		if (arg == V_0) {
-			switch (int ch = ReadChar(stm))
-			{
+			switch (int ch = ReadChar(stm)) {
 			case '_':
 				ToStream(stm)->m_flags |= STREAM_FLAG_FASL;
 				break;

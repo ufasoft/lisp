@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -29,8 +22,7 @@ bool __fastcall CLispEng::Eql(CP p, CP q) {
 		return true;
 	if (Type(p) != Type(q))
 		return false;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_BIGNUM:
 		return ToBigInteger(p)==ToBigInteger(q);
 	case TS_FLONUM:
@@ -71,8 +63,7 @@ bool CLispEng::Equal(CP p, CP q) {
 		return true;
 	if (Type(p) != Type(q))
 		return false;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_BIGNUM:
 	case TS_FLONUM:
 	case TS_RATIO:
@@ -129,8 +120,7 @@ void CLispEng::F_Equal() {
 bool CLispEng::EqualP(CP x, CP y) {
 	if (Equal(x, y))
 		return true;
-	switch (Type(x))
-	{
+	switch (Type(x)) {
 	case TS_CHARACTER:
 		if (Type(y) != TS_CHARACTER)
 			return false;
@@ -175,7 +165,7 @@ bool CLispEng::EqualP(CP x, CP y) {
 				*ay = AsArray(y);
 			size_t len = ax->DataLength;
 			if (len == ay->DataLength) {
-				for (int i=0; i<len; i++)
+				for (size_t i=0; i<len; ++i)
 					if (!EqualP(AsArray(x)->GetElement(i), AsArray(y)->GetElement(i)))
 						return false;
 				return true;
@@ -238,7 +228,7 @@ void CLispEng::F_FunctionNameP() {
 
 CP CLispEng::GetSubrName(CP p) {
 	CSymbolValue *sv=(CSymbolValue*)m_symbolMan.m_pBase;
-	for (int i=0; i<m_symbolMan.m_size; i++, sv++)
+	for (size_t i=0; i<m_symbolMan.m_size; ++i, ++sv)
 		if (sv->GetFun() == p)
 			return FromSValue(sv);
 	return 0;
@@ -259,7 +249,7 @@ void CLispEng::F_SubrInfo() {
 	m_arVal[4] = 0;
 	m_arVal[5] = 0;
 	m_cVal = 6;
-	DWORD_PTR idx = AsIndex(p) & 0x3FF;
+	uintptr_t idx = AsIndex(p) & 0x3FF;
 	if (idx < SUBR_FUNCS) {
 		const CLispFunc& lf = s_stFuncInfo[idx];
 		if (lf.m_keywords) {
@@ -313,16 +303,15 @@ void CLispEng::F_Makunbound() {
 	SetSymVal(m_r, V_U);
 }
 
-bool __fastcall CLispEng::FunnameP(CP p) {
-	switch (Type(p))
-	{
+bool __fastcall CLispEng::FunnameP(CP pfun) {
+	switch (Type(pfun)) {
 	case TS_SYMBOL:
 		return true;
 	case TS_CONS:
 		{
-			if (!p)
+			if (!pfun)
 				return true;
-			CConsValue *cons = AsCons(p);
+			CConsValue *cons = AsCons(pfun);
 			CP car = cons->m_car,
 				p = cons->m_cdr;
 			if (car == S(L_SETF) && Type(p) == TS_CONS && p) {
@@ -382,8 +371,7 @@ void CLispEng::F_GenSym() {
 		CP n = FromCInteger(counter+1);
 		Spec(L_S_GENSYM_COUNTER) = n;
 	} else {
-		switch (Type(x))
-		{
+		switch (Type(x)) {
 		case TS_ARRAY:
 			prefix = x;
 			break;
@@ -463,8 +451,7 @@ void CLispEng::F_Proclaim() {
 	CP p = SV, spec;
 	if (!SplitPair(p, spec))
 		E_Error();
-	switch (spec)
-	{
+	switch (spec) {
 	case S(L_SPECIAL):
 		for (CP car; SplitPair(p, car);) {
 			CSymbolValue *sv = ToSymbol(car);
@@ -522,8 +509,8 @@ String CLispEng::AsTrueString(CP p) {
 	CArrayValue *av = AsArray(p);
 	size_t size = av->GetVectorLength();
 	String r(' ', size);
-	for (int i=0; i<size; i++)
-		r.SetAt(i, (String::Char)AsChar(av->GetElement(i)));
+	for (size_t i=0; i<size; ++i)
+		r.SetAt(i, (String::value_type)AsChar(av->GetElement(i)));
 	return r;
 }
 
@@ -538,15 +525,14 @@ String AsString(CP p) {
 }
 
 String CLispEng::FromStringDesignator(CP p) {
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 		if (p)
 			goto LAB_ERR;
 	case TS_SYMBOL:
 		return AsSymbol(p)->m_s;
 	case TS_CHARACTER:
-		return String((String::Char)AsChar(p));
+		return String((String::value_type)AsChar(p));
 	case TS_ARRAY:
 		if (StringP(p))
 			return AsTrueString(p);
@@ -565,7 +551,7 @@ void CLispEng::F_StringUpcase() {
 	Push(SV2);
 	F_String();
 	pair<size_t, size_t> pp = PopStringBoundingIndex(m_r);
-	String s = AsTrueString(m_r).Mid(pp.first, pp.second-pp.first);
+	String s = AsTrueString(m_r).substr(pp.first, pp.second-pp.first);
 	m_r = CreateString(s.ToUpper());
 	SkipStack(1);
 }
@@ -574,7 +560,7 @@ void CLispEng::F_StringDowncase() {
 	Push(SV2);
 	F_String();
 	pair<size_t, size_t> pp = PopStringBoundingIndex(m_r);
-	String s = AsTrueString(m_r).Mid(pp.first, pp.second-pp.first);
+	String s = AsTrueString(m_r).substr(pp.first, pp.second-pp.first);
 	m_r = CreateString(s.ToLower());
 	SkipStack(1);
 }
@@ -651,8 +637,7 @@ void CLispEng::F_SymbolPackage() {
 void CLispEng::F_ConstantP() {
 	Pop(); // Env not used
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_SYMBOL:
 		m_r = FromBool(!(~ToSymbol(p)->m_fun & (SYMBOL_FLAG_SPECIAL|SYMBOL_FLAG_CONSTANT)));
 		break;  
@@ -824,7 +809,7 @@ void CLispEng::F_ChainsEx() {
 }
 */
 
-String CLispEng::FindInLISPINC(RCString filename, RCString defaultDir) {
+path CLispEng::FindInLISPINC(const path& filename, const path& defaultDir) {
 	vector<String> ar;
 #if !UCFG_WCE
 	String lispinc = Environment::GetEnvironmentVariable("LISPINC");
@@ -838,51 +823,51 @@ String CLispEng::FindInLISPINC(RCString filename, RCString defaultDir) {
 		ar.insert(ar.end(), LoadPaths.begin(), LoadPaths.end());
 
 	ar.insert(ar.begin(), defaultDir);
-	String path;
-	for (int i=0; i<ar.size(); i++)
-		if (File::Exists(path=Path::Combine(ar[i], filename)))
-			return path;
-	return "";
+	path r;
+	for (size_t i=0; i<ar.size(); ++i)
+		if (exists(r = ar[i] / filename))
+			return r;
+	return path();
 }
 
-String CLispEng::SearchFile(RCString name) {
-	vector<String> ar;
-	String filename = name;
-	if (!Path::HasExtension(name))
+path CLispEng::SearchFile(const path& name) {
+	vector<path> ar;
+	path filename = name;
+	if (!name.has_extension())
 		filename += ".lisp";
-	String s = FindInLISPINC(filename, AsPathname(Spec(L_S_DEFAULT_PATHNAME_DEFAULTS))->ToString(true));
-	if (!s.IsEmpty())
+	path s = FindInLISPINC(filename, AsPathname(Spec(L_S_DEFAULT_PATHNAME_DEFAULTS))->ToString(true));
+	if (!s.empty())
 		ar.push_back(s);
 	filename = name;
-	if (!Path::HasExtension(name))
+	if (!name.has_extension())
 		filename += ".fas";
 	s = FindInLISPINC(filename, AsPathname(Spec(L_S_DEFAULT_PATHNAME_DEFAULTS))->ToString(true));
-	if (!s.IsEmpty())
+	if (!s.empty())
 		ar.push_back(s);
-	if (ar.size()==2 && FileInfo(ar[1]).LastWriteTime > FileInfo(ar[0]).LastWriteTime)
+	if (ar.size()==2 && last_write_time(ar[1]) > last_write_time(ar[0]))
 		return ar[1];
 	else if (ar.size() > 0)
 		return ar[0];
 	else
-		return nullptr;
+		return path();
 }
 
 void CLispEng::F_FindInLispenv() {
 	F_Pathname();
-	String path = ToPathname(m_r)->ToString(); //!!!
-	String npath = SearchFile(path);
-	if (!npath)
+	path p = ToPathname(m_r)->ToString(); //!!!
+	path npath = SearchFile(p);
+	if (npath.empty())
 		E_Error();
 	m_r = CreatePathname(npath);
 }
 
 void CLispEng::F_Load() {
 	String name = AsString(Pop());
-	String path = SearchFile(name);
+	path p = SearchFile(name);
 
-	TRC(1, "Found file: " << path)
+	TRC(1, "Found file: " << p)
 
-	if (!path)
+	if (p.empty())
 		E_Error();
 	/*!!!	if (!Path::HasExtension(name))
 	name += ".lisp";
@@ -893,10 +878,10 @@ void CLispEng::F_Load() {
 	if (m_bInit)
 		m_arModule.push_back(name);
 	if (SymbolValue(GetSymbol("*LOAD-VERBOSE*", m_packCL)))
-		cout << "Loading " << path << " ..." << endl;
+		cout << "Loading " << p << " ..." << endl;
 //!!!R	CDynBindFrame bindDef(S(L_S_DEFAULT_PATHNAME_DEFAULTS), CreatePathname(AddDirSeparator(Path::GetDirectoryName(path))), true); //!!!
 
-	Push(CreatePathname(path));
+	Push(CreatePathname(p));
 	Push(S(L_K_INPUT), S(L_CHARACTER), 0);
 	Push(S(L_K_ERROR), S(L_K_DEFAULT));
 	F_Open();
@@ -908,8 +893,7 @@ void CLispEng::F_Load() {
 
 void CLispEng::F_Length() {
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 		m_r = CreateInteger(Length(p));
 		break;
@@ -963,15 +947,15 @@ void CLispEng::F_PrintSymbolName() {
 	CP prevCase = 0;
 	size_t len = av->GetVectorLength();
 	CTokenVec vec;
-	int i;
-	for (i=0; i<len; i++) {
+	size_t i;
+	for (i=0; i<len; ++i) {
 		CP pch = av->GetElement(i);
 		wchar_t ch = AsChar(pch);
 		CCharType ct = GetCharType(ch);
 		vec.push_back(CCharWithAttrs(ch, true, ct.m_traits));
 	}
 	bool bMescape = OnlyDotsOrEmpty(vec) || PotentialNumberP(vec, Spec(L_S_PRINT_BASE));
-	for (i=0; i<len; i++) {
+	for (i=0; i<len; ++i) {
 		CP pch = av->GetElement(i);
 		if (bSingleCase && rtCase==S(L_K_INVERT)) {
 			Push(pch);
@@ -997,12 +981,11 @@ void CLispEng::F_PrintSymbolName() {
 		v.push_back('|');
 	bool bPrevAlphanumeric = false;
 	CP prCase = Spec(L_S_PRINT_CASE);
-	for (i=0; i<len; i++) {
+	for (i=0; i<len; ++i) {
 		CP pch = av->GetElement(i);
 		if (bMescape) {
 			wchar_t ch = AsChar(pch);
-			switch (ch)
-			{
+			switch (ch) {
 			case '\\':
 			case '|':
 				v.push_back('\\');
@@ -1045,7 +1028,7 @@ void CLispEng::F_PrintSymbolName() {
 	if (bMescape)
 		v.push_back('|');
 	CStm sk(SV);
-	for (i=0; i<v.size(); i++)
+	for (i=0; i<v.size(); ++i)
 		WriteChar(v[i]);
 	SkipStack(2);
 }
@@ -1056,7 +1039,7 @@ bool g_print;
 
 void CLispEng::F_Pr(size_t nArgs) {
 	cerr << "_Pr ";
-	for (int i=0; i<nArgs; ++i) {
+	for (int i=0; i<(int)nArgs; ++i) {
 		CP p = m_pStack[nArgs-i-1];
 		m_r = p;		//	result is last arg
 		if (Type(p) == TS_ARRAY && !StringP(p)) {
@@ -1079,7 +1062,7 @@ void CLispEng::F_Pr(size_t nArgs) {
 		++g_b;
 	}
 #endif
-}
+	}
 
 void CLispEng::F_Disassemble() {
 	Disassemble(cerr, SV);
@@ -1096,11 +1079,9 @@ void CLispEng::F_Last() {
 	m_r = Pop();
 	CP q = m_r;
 	for (size_t count=num!=V_U ? AsPositive(num) : 1; count--;) {
-		switch (Type(q))
-		{
+		switch (Type(q)) {
 		case TS_CONS:
-			if (q)
-			{
+			if (q) {
 				q = Cdr(q);
 				continue;
 			}
@@ -1115,8 +1096,7 @@ void CLispEng::F_Last() {
 }
 
 void CLispEng::F_Endp() {
-	switch (Type(m_r=Pop()))
-	{
+	switch (Type(m_r=Pop())) {
 	case TS_CONS:
 		m_r = FromBool(!m_r);
 		break;
@@ -1136,9 +1116,9 @@ void CLispEng::F_Exit() {
 	CP r = ToOptional(Pop(), V_0);	
 	if (IntegerP(r)) {
 		BigInteger bi = ToBigInteger(r);
-		Int64 n;
+		int64_t n;
 		if (bi.AsInt64(n))
-			m_exitCode = (UInt32)n;
+			m_exitCode = (uint32_t)n;
 		else
 			m_exitCode = 1;
 	} else
@@ -1175,23 +1155,20 @@ void CLispEng::F_RenameFile() {
 	SV1 = m_r;
 
 	Call(S(L_MERGE_PATHNAMES), SV, SV1);
-	String defNewName = AsString(m_r);
-
-	FileInfo fi(AsString(SV1));
-	
-	try {
-		fi.MoveTo(defNewName);
-	} catch (RCExc) {
+	path defNewName = AsString(m_r),
+		from = AsString(SV1);
+	error_code ec;
+	sys::rename(from, defNewName, ec);
+	if (ec)
 		E_FileErr(m_r);
-	}
 
 	Push(m_r);		// defNewName
 
-	Push(CreateString(fi.FullPath));
+	Push(CreateString(from));
 	F_Pathname();
 	SV2 = m_r;
 
-	Push(CreateString(FileInfo(AsString(SV1)).FullPath));
+	Push(SV1);		//!!!?
 	F_Pathname();
 	m_arVal[2] = m_r;
 	m_arVal[1] = SV2;
@@ -1210,7 +1187,7 @@ return;
 ostringstream os;
 CP car = Car(p);
 char ch;
-DWORD traits;
+uint32_t traits;
 if (AsNumber(Cdr(car)) & TRAIT_SIGN)
 {
 os << (char)AsChar(Car(car)); //!!!

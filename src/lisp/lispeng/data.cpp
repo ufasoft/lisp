@@ -1,11 +1,8 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
+
+#if UCFG_WIN32
+#	include <el/libext/win32/ext-win.h>
+#endif
 
 #include "lispeng.h"
 #include "lisp_itf.h"
@@ -82,12 +79,12 @@ const CP g_fnEq = CLispEng::FindSubr(&CLispEng::F_Eq, 2, 0, 0),									// All G
 	g_fnEqualP = CLispEng::FindSubr(&CLispEng::F_EqualP, 2, 0, 0),
 	g_fnEqNum = CLispEng::FindSubr((CLispEng::FPLispFunc)&CLispEng::F_EqNum, 1, 0, 1);
 
-CP CLispEng::CreateSpecialOperator(DWORD n) {
+CP CLispEng::CreateSpecialOperator(uint32_t n) {
 	const CLispSO& func = s_stSOInfo[n];
 	return func.m_name ? CreateSpecialOperator(n, func.m_nReq, func.m_nOpt, func.m_bRest) : 0;
 }
 
-CP CLispEng::CreateSubr(DWORD n) {
+CP CLispEng::CreateSubr(uint32_t n) {
 	if (n < SUBR_FUNCS) {
 		const CLispFunc& func = s_stFuncInfo[n];
 		return func.m_name ? CreateSubr(n, func.m_nReq, func.m_nOpt, 0, func.m_keywords) : 0;
@@ -99,18 +96,17 @@ CP CLispEng::CreateSubr(DWORD n) {
 
 CP CLispEng::FindSubr(FPLispFunc pfn, byte nReq, byte nOpt, byte bRest) {
 	int i;
-	for (i=0; i<_countof(s_stFuncAddrs); i++)
+	for (i=0; i<size(s_stFuncAddrs); i++)
 		if (s_stFuncAddrs[i] == pfn)
 			return CreateSubr(i, nReq, nOpt, bRest, 0);
-	for (i=0; i<_countof(s_stFuncRAddrs); i++)
+	for (i=0; i<size(s_stFuncRAddrs); i++)
 		if ((FPLispFunc)s_stFuncRAddrs[i] == pfn)
 			return CreateSubr(i+SUBR_FUNCS, nReq, nOpt, bRest, 0);
 	E_Error();
 }
 
 CP CLispEng::PackageFromIndex(int idx) {
-	switch (idx)
-	{
+	switch (idx) {
 	case 0: return m_packSYS;
 	case 1: return m_packCL;
 	case 2: return m_packCLOS;
@@ -127,13 +123,13 @@ CP CLispEng::PackageFromIndex(int idx) {
 
 void CLispEng::F_FunTabRef() {
 	size_t idx = AsPositive(Pop());
-	if (idx < _countof(s_stFuncInfo)) {
+	if (idx < size(s_stFuncInfo)) {
 		const CLispFunc& lispFunc = s_stFuncInfo[idx];
 		if (lispFunc.m_name)
 			m_r = GetSymbol(lispFunc.m_name, PackageFromIndex(lispFunc.m_bCL));
 	} else {
 		idx -= SUBR_FUNCS;
-		if (idx < _countof(s_stFuncRInfo)) {
+		if (idx < size(s_stFuncRInfo)) {
 			const CLispFuncR& lispFunc = s_stFuncRInfo[idx];
 			if (lispFunc.m_name)
 				m_r = GetSymbol(lispFunc.m_name, PackageFromIndex(lispFunc.m_bCL));
@@ -169,8 +165,8 @@ CP CLispEng::CreateStandardStream(CEnumStream n) {
 
 #ifdef WIN32
 void CLispEng::put_Stream(CEnumStream idx, ptr<StandardStream> p) {
-	AFX_MANAGE_STATE(AfxGetStaticModuleState())
-		m_streams[idx] = p;
+	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	m_streams[idx] = p;
 	if (m_bInited)
 		SetSpecial(get_Sym(g_arStreamSymbol[idx]), CreateStandardStream(idx));
 }
@@ -193,21 +189,16 @@ void LispSetStandardStream(LISPHANDLE h, int idx, void *stdStream) {
 void CLispEng::SetPathVars() {
 	{
 		CListConstructor lc;
-#if UCFG_WCE
-		String dir = Path::GetDirectoryName(System.ExeFilePath);
-#else
-		String dir = Directory::GetCurrentDirectory();
-#endif
 		SetSpecial(S(L_S_DEFAULT_PATHNAME_DEFAULTS), 0);  	//  to prevent self-loop
-		SetSpecial(S(L_S_DEFAULT_PATHNAME_DEFAULTS), CreatePathname(AddDirSeparator(dir)));
+		SetSpecial(S(L_S_DEFAULT_PATHNAME_DEFAULTS), CreatePathname(AddDirSeparator(current_path())));
 
-		for (int i=0; i<LoadPaths.size(); ++i)
+		for (size_t i=0; i<LoadPaths.size(); ++i)
 			lc.Add(CreatePathname(AddDirSeparator(LoadPaths[i])));
 #if !UCFG_WCE
 		String lispinc = Environment::GetEnvironmentVariable("LISPINC");
 		if (!!lispinc) 	{
 			vector<String> ar = lispinc.Split(String(Path::PathSeparator));
-			for (int i=0; i<ar.size(); i++)
+			for (size_t i=0; i<ar.size(); i++)
 				lc.Add(CreatePathname(AddDirSeparator(ar[i])));
 		}
 #endif
@@ -218,11 +209,10 @@ void CLispEng::SetPathVars() {
 pair<String, CP> CLispEng::GetStaticSymbolNamePack(int i) {
 	const char *p = nullptr;
 	CP pack = 0;
-	if (i < _countof(g_arSymbol)-1) {
+	if (i < size(g_arSymbol)-1) {
 		p = g_arSymbol[i];
 		pack = m_packCL;
-		switch (p[0])
-		{
+		switch (p[0]) {
 		case '^':
 			p++;
 		case '%':
@@ -298,7 +288,7 @@ void CLispEng::InitVars() {
 	CommonInit();
 
 	int i;
-	for (i=0; i<_countof(g_arSymbol)-1; i++) {
+	for (i=0; i<size(g_arSymbol)-1; i++) {
 		pair<String, CP> pp = GetStaticSymbolNamePack(i);
 		GetSymbol(pp.first, pp.second);
 	}
@@ -320,19 +310,19 @@ void CLispEng::InitVars() {
 
 	SetVars();
 
-	for (i=0; i<_countof(s_stSOInfo); i++) {
+	for (i=0; i<size(s_stSOInfo); i++) {
 		const CLispSO& func = s_stSOInfo[i];
 		if (!func.m_name)
 			break;
 		ToSymbol(GetSymbol(func.m_name, PackageFromIndex(func.m_bCL)))->SetFun(CreateSpecialOperator(i));
 	}
-	for (i=0; i<_countof(s_stFuncInfo); i++) {
+	for (i=0; i<size(s_stFuncInfo); i++) {
 		const CLispFunc& func = s_stFuncInfo[i];
 		if (!func.m_name)
 			break;
 		ToSymbol(GetSymbol(func.m_name, PackageFromIndex(func.m_bCL)))->SetFun(CreateSubr(i));
 	}
-	for (i=0; i<_countof(s_stFuncRInfo); i++) {
+	for (i=0; i<size(s_stFuncRInfo); i++) {
 		const CLispFuncR& func = s_stFuncRInfo[i];
 		if (!func.m_name)
 			break;
@@ -396,7 +386,7 @@ void CLispEng::InitVars() {
 	SetConstant(S(L_LEAST_POSITIVE_NORMALIZED_SINGLE_FLOAT), leastPositive);
 	SetConstant(S(L_LEAST_NEGATIVE_NORMALIZED_SINGLE_FLOAT), leastNegative);
 
-	SetConstant(S(L_INTERNAL_TIME_UNITS_PER_SECOND), CreateInteger64(UCFG_LISP_INTERNAL_TIME_UNITS_PER_SECOND));
+	SetConstant(S(L_INTERNAL_TIME_UNITS_PER_SECOND), CreateInteger64(UCFG_LISP_INTERNAL_TIME_UNITS_PER_SECOND::period::den));
 
 	SetPathVars();
 
@@ -414,7 +404,7 @@ void CLispEng::InitVars() {
 //!!!R	SetSpecial(S(L_S_RANDOM_STATE), FromSValueT(CreateRandomState(0), TS_RANDOMSTATE));
 
 	/*!!!  CLispSymbol arLKeys[] = {L_ALLOW_OTHER_KEYS, L_AUX, L_BODY, L_ENVIRONMENT, L_KEY, L_OPTIONAL, L_REST, L_WHOLE};
-	for (i=0; i<_countof(arLKeys); i++)
+	for (i=0; i<size(arLKeys); i++)
 	ToSymbol(Syms[arLKeys[i]])->m_bLambdaKeyword = true;*/
 	m_bVarsInited = true;
 }
@@ -432,7 +422,7 @@ void CLispEng::SetVars() {
 
 	{
 		CListConstructor lc;
-		for (int i=0; i<m_arCommandLineArg.size(); i++)
+		for (size_t i=0; i<m_arCommandLineArg.size(); i++)
 			lc.Add(CreateString(m_arCommandLineArg[i]));
 		SetSpecial(GetSymbol("*ARGS*", m_packEXT), lc);
 	}

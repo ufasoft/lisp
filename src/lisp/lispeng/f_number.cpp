@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 using namespace rel_ops;
@@ -31,17 +24,17 @@ CP CLispEng::FromCInteger(const BigInteger& v) {
 	return FromSValue(CreateBignum(v));
 }
 
-CP CLispEng::BignumFrom(Int64 n) {
+CP CLispEng::BignumFrom(int64_t n) {
 	return FromSValue(CreateBignum(BigInteger(n)));
 }
 
-CP CLispEng::CreateInteger64(Int64 n) {
+CP CLispEng::CreateInteger64(int64_t n) {
 	if (n < FIXNUM_LIMIT && n >= -FIXNUM_LIMIT)
 		return CreateFixnum((INT_PTR)n);
 	return BignumFrom(n);
 }
 
-CP CLispEng::CreateIntegerU64(UInt64 n) {
+CP CLispEng::CreateIntegerU64(uint64_t n) {
 	if (n < FIXNUM_LIMIT)
 		return CreateFixnum((INT_PTR)n);
 	return BignumFrom(n);
@@ -126,8 +119,7 @@ void CLispEng::F_LogEQV(size_t nArgs) {
 }
 
 void CLispEng::F_Numerator() {
-	switch (Type(m_r=Pop()))
-	{
+	switch (Type(m_r=Pop())) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 		break;
@@ -140,8 +132,7 @@ void CLispEng::F_Numerator() {
 }
 
 void CLispEng::F_Denominator() {
-	switch (Type(m_r=Pop()))
-	{
+	switch (Type(m_r=Pop())) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 		m_r = V_1;
@@ -156,8 +147,7 @@ void CLispEng::F_Denominator() {
 
 void CLispEng::F_EvenP() {
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FIXNUM:
 		m_r = FromBool((p & (1 << VALUE_SHIFT)) == 0);
 		break;
@@ -170,8 +160,7 @@ void CLispEng::F_EvenP() {
 }
 
 double CLispEng::ToFloatValue(CP x) {
-	switch (Type(x))
-	{
+	switch (Type(x)) {
 	case TS_FLONUM:
 		return AsFloatVal(x);
 	case TS_FIXNUM:
@@ -199,8 +188,7 @@ void CLispEng::F_Float() {
 	if (SV != V_U && Type(SV)!=TS_FLONUM)
 		E_TypeErr(SV, S(L_FLOAT));
 	CP p = SV1;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FLONUM:
 		m_r = p;
 		break;
@@ -258,8 +246,7 @@ void CLispEng::CheckIntegers(size_t nArgs) {
 }
 
 void CLispEng::Add(CP n1, CP n2) {
-	switch (Type(n1))
-	{
+	switch (Type(n1)) {
 	case TS_FIXNUM:
 		if (Type(n2) == TS_FIXNUM) {
 			m_r = CreateInteger(AsFixnum(n1)+AsFixnum(n2));
@@ -277,8 +264,7 @@ void CLispEng::Add(CP n1, CP n2) {
 }
 
 void CLispEng::Sub(CP n1, CP n2) {
-	switch (Type(n1))
-	{
+	switch (Type(n1)) {
 	case TS_FIXNUM:
 		if (Type(n2) == TS_FIXNUM) {
 			m_r = CreateInteger(AsFixnum(n1)-AsFixnum(n2));
@@ -325,8 +311,7 @@ void CLispEng::AddSub(FPAddSub pfn, size_t nArgs, bool bMinus) {
 		CP x = m_r,
 			y = m_arVal[1];
 		Push(x, y);
-		switch (Type(x))
-		{
+		switch (Type(x)) {
 		case TS_COMPLEX:
 			{
 				CComplex *cx = AsComplex(x),
@@ -379,7 +364,7 @@ void CLispEng::F_Multiply(size_t nArgs) {
 		while (--nArgs > 0) {
 			CP x = SV, y = SV1;
 			if (Type(x)==TS_FIXNUM && Type(y)==TS_FIXNUM) {
-				SV1 = CreateInteger64(Int64(AsFixnum(x)) * Int64(AsFixnum(y)));
+				SV1 = CreateInteger64(int64_t(AsFixnum(x)) * int64_t(AsFixnum(y)));
 				SkipStack(1);
 			} else if (Type(x)==TS_COMPLEX || Type(y)==TS_COMPLEX)
 				Mul(CoerceToComplex(x), CoerceToComplex(y));
@@ -426,8 +411,7 @@ void CLispEng::F_Abs() {
 	CP x = SV;
 	if (!NumberP(x))
 		E_TypeErr(x, S(L_NUMBER));
-	switch (Type(x))
-	{
+	switch (Type(x)) {
 	case TS_COMPLEX:
 		{
 			CComplex *c = AsComplex(x);
@@ -592,8 +576,7 @@ void CLispEng::Mul(const CRatio& x, const CRatio& y) {
 void CLispEng::F_Mul() {
 	CP n2 = Pop(),
 		n1 = Pop();
-	switch (Type(n1))
-	{
+	switch (Type(n1)) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 		m_r = FromCInteger(ToBigInteger(n1)*ToBigInteger(n2));
@@ -611,8 +594,7 @@ void CLispEng::F_Mul() {
 void CLispEng::F_Div() {
 	CP n2 = Pop(),
 		n1 = Pop();
-	switch (Type(n1))
-	{
+	switch (Type(n1)) {
 		//!!!R  case TS_FIXNUM:
 		//!!!Rcase TS_BIGNUM:
 		//!!!Rm_r = DivBignums(n1, n2);
@@ -785,8 +767,7 @@ void CLispEng::F_LesserOrEqual(size_t nArgs) {
 
 /*!!!R
 void CLispEng::EqNum(CP x, CP y) {
-	switch (Type(x))
-	{
+	switch (Type(x)) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 		m_r = FromBool(ToBigInteger(x)==ToBigInteger(y));
@@ -919,8 +900,7 @@ void CLispEng::F_RationalP() {
 }
 
 void CLispEng::F_RealP() {
-	switch (Type(Pop()))
-	{
+	switch (Type(Pop())) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 	case TS_RATIO:
@@ -930,8 +910,7 @@ void CLispEng::F_RealP() {
 }
 
 void CLispEng::CheckReal(CP x) {
-	switch (Type(x))
-	{
+	switch (Type(x)) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 	case TS_RATIO:
@@ -950,8 +929,7 @@ void CLispEng::CheckReals(size_t nArgs) {
 /*!!!R
 void CLispEng::F_Rational() {
 	m_r = Pop();
-	switch (Type(m_r))
-	{
+	switch (Type(m_r)) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 	case TS_RATIO:
@@ -999,8 +977,7 @@ m_r = List(FromBool(r & 0x80000000), FromBool(r & 0x100000000), CreateInteger((s
 }*/
 
 double CLispEng::CheckFinite(double d) {
-	switch (fpclassify(d))
-	{
+	switch (fpclassify(d)) {
 	case FP_INFINITE:
 		CerrorOverflow();
 		break;
@@ -1058,8 +1035,7 @@ void CLispEng::F_ATan2() {
 
 void CLispEng::F_Phase() {
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 	case TS_RATIO:
@@ -1126,7 +1102,7 @@ LAB_START:
 class CFloat8 {
 	union {
 		double m_d;
-		Int64 m_i;
+		int64_t m_i;
 	};
 
 	int ExpPart() {
@@ -1138,8 +1114,8 @@ public:
 		m_d = d;
 	}
 
-	Int64 Mantissa() {
-		Int64 r = m_i & 0xFFFFFFFFFFFFFLL;
+	int64_t Mantissa() {
+		int64_t r = m_i & 0xFFFFFFFFFFFFFLL;
 		if (!r && !ExpPart())
 			return 0;
 		return r | 0x10000000000000LL;
@@ -1187,7 +1163,7 @@ void CLispEng::F_FloatSign() {
 void CLispEng::F_IntegerDecodeFloat() {
 	CFloat8 f = AsFloatVal(Pop());
 #ifdef _DEBUG //!!!D
-	Int64 m = f.Mantissa();
+	int64_t m = f.Mantissa();
 	int e = f.Exponent();
 	int s = f.Sign();
 #endif
@@ -1199,8 +1175,7 @@ void CLispEng::F_IntegerDecodeFloat() {
 
 void CLispEng::F_ZeroP() {
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FIXNUM:
 		m_r = FromBool(p==V_0);
 		break;
@@ -1229,8 +1204,7 @@ void CLispEng::F_ZeroP() {
 
 void CLispEng::F_MinusP() {
 	CSPtr p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FIXNUM:
 		m_r = FromBool(AsFixnum(p) < 0);
 		break;
@@ -1251,8 +1225,7 @@ void CLispEng::F_MinusP() {
 
 void CLispEng::F_PlusP() {
 	CSPtr p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FIXNUM:
 		m_r = FromBool(AsFixnum(p) > 0);
 		break;
@@ -1278,8 +1251,7 @@ void CLispEng::F_PlusP() {
 void CLispEng::F_Floor1()
 {
 m_r = Pop();
-switch (Type(m_r))
-{
+switch (Type(m_r)) {
 case TS_FLONUM:
 m_r = CreateInteger64((LONGLONG)CheckFinite(floor(AsFloatVal(m_r))));
 break;
@@ -1315,8 +1287,7 @@ void CLispEng::F_Complex() {
 
 void CLispEng::F_RealPart() {
 	m_r = Pop();
-	switch (Type(m_r))
-	{
+	switch (Type(m_r)) {
 	case TS_COMPLEX:
 		m_r = AsComplex(m_r)->m_real;
 		break;
@@ -1332,8 +1303,7 @@ void CLispEng::F_RealPart() {
 
 void CLispEng::F_ImagPart() {
 	m_r = Pop();
-	switch (Type(m_r))
-	{
+	switch (Type(m_r)) {
 	case TS_COMPLEX:
 		m_r = AsComplex(m_r)->m_imag;
 		break;
@@ -1408,12 +1378,15 @@ CP CLispEng::CpFromRandomState(CP rs) {
 #endif
 }
 
-Ext::Random CLispEng::FromRandomState(CP rs) {
-	BigInteger big = ToBigInteger(CpFromRandomState(rs));
-	S_BASEWORD n;
-	if (!big.AsBaseWord(n))
-		E_ProgramErr();
-	return Ext::Random(n);
+void CLispEng::FromRandomState(CP rs, default_random_engine& rngeng) {
+	istringstream is(AsTrueString(CpFromRandomState(rs)).c_str());
+	is >> rngeng;
+}
+
+CP CLispEng::SerializedRandomeEngine(const default_random_engine& rneng) {
+	ostringstream os;
+	os << rneng;
+	return CreateString(os.str());
 }
 
 void CLispEng::ModifyRandomState(CP rs, CP p) {
@@ -1425,8 +1398,8 @@ void CLispEng::ModifyRandomState(CP rs, CP p) {
 #endif
 }
 
-void CLispEng::ModifyRandomState(CP rs, const Ext::Random& random) {
-	ModifyRandomState(rs, CreateInteger(random.m_seed));
+void CLispEng::ModifyRandomState(CP rs, const default_random_engine& rneng) {
+	ModifyRandomState(rs, SerializedRandomeEngine(rneng));
 }
 
 void CLispEng::F_Random() {
@@ -1436,20 +1409,20 @@ void CLispEng::F_Random() {
 		E_TypeErr(SV1, List(S(L_REAL), V_0, S(L_ASTERISK)));
 	CP pRS = SV==V_U ? Spec(L_S_RANDOM_STATE) : SV;
 
-	Ext::Random random = FromRandomState(pRS);
-	switch (Type(SV1))
-	{
+	default_random_engine rngeng;
+	FromRandomState(pRS, rngeng);
+	switch (Type(SV1)) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
-		m_r = FromCInteger(BigInteger::Random(ToBigInteger(SV1), &random));
+		m_r = FromCInteger(BigInteger::Random(ToBigInteger(SV1), rngeng));
 		break;
 	case TS_FLONUM:
-		m_r = FromFloat(random.NextDouble()*AsFloatVal(SV1));
+		m_r = FromFloat(uniform_real_distribution<double>(0, AsFloatVal(SV1)) (rngeng));
 		break;
 	default:
 		E_TypeErr(SV1, List(S(L_OR), S(L_INTEGER), S(L_FLOAT)));
 	}
-	ModifyRandomState(pRS, random);
+	ModifyRandomState(pRS, rngeng);
 	SkipStack(2);
 }
 
@@ -1458,7 +1431,7 @@ void CLispEng::F_MakeRandomState() {
 	CP rs;
 	switch (p) {
 	case V_T: 
-		rs  = CreateInteger(Ext::Random().m_seed);
+		rs  = SerializedRandomeEngine(default_random_engine());
 		break;
 	case 0:
 	case V_U:

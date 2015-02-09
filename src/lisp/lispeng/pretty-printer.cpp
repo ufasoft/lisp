@@ -649,7 +649,7 @@ CExternalPrint::CExternalPrint() {
 		++count;
 	}
 	if (lisp.Spec(L_S_PRINT_READABLY)) {
-		for (int i=0; i<_countof(s_boundVals); ++i) {
+		for (int i=0; i<size(s_boundVals); ++i) {
 			const CSymBoundVal& sv = s_boundVals[i];
 			if (lisp.get_Special(sv.sym) != sv.val) {
 				Bind(lisp, IDX_TS(sv.sym, TS_SYMBOL), sv.val);

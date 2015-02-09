@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -109,12 +102,12 @@ CP __fastcall CLispEng::NReverse(CP p) {
 				CSPtr p1 = p3,
 					p2;
 				do {
-					consP3 = ToCons(p3 = SwapRet((CSPtr&)consP3->m_cdr, SwapRet(p2, p3)));
+					consP3 = ToCons(p3 = exchange((CSPtr&)consP3->m_cdr, exchange(p2, p3)));
 				} while (consP3->m_cdr);
 				consP->m_cdr = p2;
 				ToCons(p1)->m_cdr = p3;
 			}
-			consP->m_car = SwapRet(consP3->m_car, consP->m_car);
+			consP->m_car = exchange(consP3->m_car, consP->m_car);
 		}
 	}
 	return p;
@@ -132,12 +125,12 @@ CP CLispEng::AppendEx(CP p, CP q) {
 }
 
 void CLispEng::MvToStack() {
-	for (int i=0; i<m_cVal; i++)
+	for (size_t i=0; i<m_cVal; ++i)
 		Push(m_arVal[i]);
 }
 
 void CLispEng::StackToMv(size_t n) {
-	if (n > _countof(m_arVal))
+	if (n > size(m_arVal))
 		E_Err(IDS_E_TooManyValues, GetSubrName(m_subrSelf));
 	if (m_cVal = n) {
 		do {

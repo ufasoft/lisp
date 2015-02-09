@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -25,9 +18,9 @@ void CLispEng::F_GetInternalRunTime() {
 	m_r = TimeSpanToInternalTimeUnits(Thread::CurrentThread->get_TotalProcessorTime() - m_spanStartUser);
 }
 
-UInt64 CLispEng::GetFreedBytes() {
-	UInt64 r = 0;
-	for (int i=0; i<m_arValueMan.size(); ++i)
+uint64_t CLispEng::GetFreedBytes() {
+	uint64_t r = 0;
+	for (size_t i=0; i<m_arValueMan.size(); ++i)
 		r += m_arValueMan[i]->m_cbFreed;
 	return r;
 }
@@ -55,8 +48,8 @@ void CLispEng::F_PPTime() {
 void CLispEng::F_Room() {
 	CP x = ToOptional(Pop(), S(L_K_DEFAULT));
 
-	UInt64 cbUsed = 0, cbFreed = GetFreedBytes();
-	for (int i=0; i<m_arValueMan.size(); ++i) {
+	uint64_t cbUsed = 0, cbFreed = GetFreedBytes();
+	for (size_t i=0; i<m_arValueMan.size(); ++i) {
 		CValueManBase *man = m_arValueMan[i];
 		byte *p = (byte*)man->m_pBase;
 #if UCFG_LISP_GC_USE_ONLY_BITMAP
@@ -97,7 +90,7 @@ void CLispEng::F_Room() {
 }
 
 CP CLispEng::ToUniversalTime(const DateTime& utc) {
-	return CreateInteger64(Int64((utc-s_dtSince1900).TotalSeconds));
+	return CreateInteger64(duration_cast<seconds>(utc-s_dtSince1900).count());
 }
 
 void CLispEng::F_GetUniversalTime() {
@@ -105,7 +98,7 @@ void CLispEng::F_GetUniversalTime() {
 }
 
 void CLispEng::F_DefaultTimeZone() {
-	Push(CreateInteger(-int(TimeZoneInfo::Local().BaseUtcOffset.TotalSeconds)), CreateFixnum(3600));
+	Push(CreateInteger(-duration_cast<seconds>(TimeZoneInfo::Local().BaseUtcOffset).count()), CreateFixnum(3600));
 	F_Divide(1);
 }
 
@@ -113,8 +106,8 @@ void CLispEng::F_DecodeUniversalTime() {
 	CP pTz = SV;
 	CP tim = SV1;
 	BigInteger utc = ToBigInteger(tim);
-	Int64 sec;
-	DateTime dt;
+	int64_t sec;
+	LocalDateTime dt;
 	bool bDaylight = false;
 	if (pTz) {
 		Push(pTz, CreateFixnum(3600));
@@ -123,7 +116,7 @@ void CLispEng::F_DecodeUniversalTime() {
 		BigInteger tint = utc-tz;
 		if (!tint.AsInt64(sec))
 			E_TypeErr(tim, S(L_INTEGER)); //!!!
-		dt = s_dtSince1900+TimeSpan::FromSeconds(double(sec));		
+		dt = LocalDateTime(s_dtSince1900+TimeSpan::FromSeconds(double(sec)));
 		m_arVal[8] = pTz;
 	} else {
 		if (!utc.AsInt64(sec))
@@ -148,23 +141,23 @@ void CLispEng::F_DecodeUniversalTime() {
 }
 
 void CLispEng::F_EncodeUniversalTime() {
-	int y = (WORD)AsNumber(SV1),
-		month = (WORD)AsNumber(SV2),
-		d = (WORD)AsNumber(SV3),
-		h = (WORD)AsNumber(SV4),
-		minute = (WORD)AsNumber(SV5),
-		sec = (WORD)AsNumber(SV6);
-	DateTime dt = DateTime(y, month, d, h, minute, sec);
-	Int64 utc;
+	int y = (uint16_t)AsNumber(SV1),
+		month = (uint16_t)AsNumber(SV2),
+		d = (uint16_t)AsNumber(SV3),
+		h = (uint16_t)AsNumber(SV4),
+		minute = (uint16_t)AsNumber(SV5),
+		sec = (uint16_t)AsNumber(SV6);
+	LocalDateTime dt = LocalDateTime(DateTime(y, month, d, h, minute, sec));
+	int64_t utc;
 
 	CP pTz = SV;
 	if (pTz) {
 		Push(pTz, CreateFixnum(3600));
 		F_Multiply(2);
 		int tz = AsNumber(m_r);
-		utc = Int64((dt-s_dtSince1900).TotalSeconds)+tz;
+		utc = duration_cast<seconds>(dt-s_dtSince1900).count() + tz;
 	} else {
-		utc = Int64((dt.ToUniversalTime()-s_dtSince1900).TotalSeconds);
+		utc = duration_cast<seconds>(dt.ToUniversalTime()-s_dtSince1900).count();
 	}
 	m_r = CreateInteger64(utc);
 	SkipStack(7);
@@ -206,7 +199,7 @@ void CLispEng::F_UserHomedirPathname() {
 		String path;
 #if UCFG_WCE
 		WCHAR buf[_MAX_PATH];
-		DWORD dwSize = _countof(buf);
+		DWORD dwSize = size(buf);
 		Win32Check(::GetUserDirectory(buf, &dwSize));
 		path = buf;
 #else

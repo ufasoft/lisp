@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -21,8 +14,7 @@ const byte CLispEng::s_ts2numberP[32] = {
 
 CP __fastcall CLispEng::FromSValueT(CSValue *pv, CTypeSpec ts) {
 	size_t idx;
-	switch (ts)
-	{
+	switch (ts) {
 	case TS_CONS:
 	case TS_RATIO:
 	case TS_COMPLEX:
@@ -92,8 +84,7 @@ CP __fastcall CLispEng::FromSValueT(CSValue *pv, CTypeSpec ts) {
 
 CP CLispEng::FromFunctionDesignator(CP p) {
 	CSPtr q;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_INTFUNC:
 	case TS_SUBR:
 	case TS_CCLOSURE:
@@ -109,8 +100,7 @@ CP CLispEng::FromFunctionDesignator(CP p) {
 	default:
 		E_TypeErr(p, 0, IDS_E_IsNotAFunctionName, GetSubrName(m_subrSelf), p);
 	}
-	switch (Type(q))
-	{
+	switch (Type(q)) {
 	case TS_INTFUNC:
 	case TS_SUBR:
 	case TS_CCLOSURE:
@@ -158,8 +148,7 @@ bool CLispEng::VectorP(CP p) {
 bool CLispEng::StringP(CP p) {
 	if (!VectorP(p))
 		return false;
-	switch (AsArray(p)->GetElementType())
-	{
+	switch (AsArray(p)->GetElementType()) {
 	case ELTYPE_CHARACTER:
 	case ELTYPE_BASECHAR:
 		return true;
@@ -290,7 +279,7 @@ DWORD_PTR AsFrameTop(CP p) {
 CP CLispEng::Cons(CP a, CP b) {
 	CConsValue *cons;
 	if (m_consMan.m_pHeap) {
-		cons = (CConsValue *)SwapRet(m_consMan.m_pHeap, (CConsValue*)((DWORD_PTR*)m_consMan.m_pHeap)[1]);
+		cons = (CConsValue*)exchange(m_consMan.m_pHeap, (CConsValue*)((uintptr_t*)m_consMan.m_pHeap)[1]);
 		cons->m_car = a;
 		cons->m_cdr = b;
 	} else {
@@ -461,9 +450,9 @@ CP CLispEng::CopyVector(CP p) {
 }
 
 CP CLispEng::CreateString(RCString s) {
-	size_t size = s.Length;
+	size_t size = s.length();
 	CArrayValue *av = CreateVector(size, ELTYPE_CHARACTER);
-	memcpy(av->m_pData, (const String::Char*)s, size*sizeof(String::Char));
+	memcpy(av->m_pData, (const String::value_type*)s, size*sizeof(String::value_type));
 	return FromSValue(av);
 }
 
@@ -501,8 +490,7 @@ CIntFuncValue::CIntFuncValue(const CIntFuncValue& ifv) {
 }
 
 CP CIntFuncValue::GetField(size_t idx) {		//!!!CLISP
-	switch (idx)
-	{
+	switch (idx) {
 	case 0: return m_name;
 	case 1: return m_form;
 	case 2: return m_docstring;
@@ -550,7 +538,7 @@ void CIntFuncValue::Read(const BlsReader& rd) {
 		>> m_vars
 		>> m_optInits >> m_keywords >> m_keyInits >> m_auxInits;
 	(BinaryReader&)rd >> m_nReq >> m_nOpt >> m_nSpec >> m_nKey >> m_nAux >> m_bAllowFlag >> m_bRestFlag;
-	UInt16 count = rd.ReadUInt16();
+	uint16_t count = rd.ReadUInt16();
 	if (count) {
 		m_varFlags = new byte[count];
 		for (int i=0; i<count; i++)
@@ -621,7 +609,7 @@ void CStreamValue::Read(const BlsReader& rd) {
 	m_pStm = Lisp().m_arStream[n];*/
 }
 
-Int64& CStreamValue::LinePosRef() {
+int64_t& CStreamValue::LinePosRef() {
 	if (m_stream)
 		return m_stream->m_nPos;
 	if (m_nStandard != -1)
@@ -714,7 +702,7 @@ const BlsReader& operator>>(const BlsReader& rd, CCharType& ct) {
 
 void CReadtable::Write(BlsWriter& wr) {
 	wr << m_case;
-	for (int i=0; i<_countof(m_ar); i++)
+	for (int i=0; i<size(m_ar); i++)
 		wr << m_ar[i];
 	wr.WriteSize(m_map.size());
 	for (CCharMap::iterator it=m_map.begin(); it!=m_map.end(); ++it) {
@@ -725,7 +713,7 @@ void CReadtable::Write(BlsWriter& wr) {
 
 void CReadtable::Read(const BlsReader& rd) {
 	rd >> m_case;
-	for (int i=0; i<_countof(m_ar); i++)
+	for (int i=0; i<size(m_ar); i++)
 		rd >> m_ar[i];
 	size_t num = rd.ReadSize();
 	while (num--) {

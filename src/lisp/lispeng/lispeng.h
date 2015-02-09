@@ -4,6 +4,9 @@
 #	include <el/libext/ext-os-api.h>
 #endif
 
+#include <cmath>
+#include <random>
+
 #include "lisp.h"
 #include "resource.h"
 
@@ -177,8 +180,8 @@ const DWORD BINLISP_SIG = 0x0050534C; // "LSP"
 #pragma pack(push, 4)
 
 struct CBlsHeader {
-	UInt32 m_sig;
-	UInt64 m_ver;
+	uint32_t m_sig;
+	uint64_t m_ver;
 	//!!!            m_verLastCompatible;
 
 	CBlsHeader(bool bVerifyVersion);
@@ -235,7 +238,7 @@ public:
 	}
 };
 
-CLispEng& __stdcall GetLisp();
+CLispEng& __stdcall GetLisp() noexcept;
 
 #ifdef _LISPENG
 #	define LISP Lisp()
@@ -249,7 +252,7 @@ CLispEng& __stdcall GetLisp();
 #	define DEBUG_NOT_INLINE __forceinline
 #endif
 
-__forceinline CP FromValue(intptr_t s, CTypeSpec ts) {
+__forceinline CP FromValue(intptr_t s, CTypeSpec ts) noexcept {
 	return ts | (uintptr_t(s) << VALUE_SHIFT);
 }
 
@@ -257,7 +260,7 @@ inline CP CreateChar(wchar_t ch) {
 	return FromValue(char_traits<wchar_t>::to_int_type(ch), TS_CHARACTER);
 }
 
-inline CP CreateFixnum(UInt16 n) { return FromValue(n, TS_FIXNUM); }
+inline CP CreateFixnum(uint16_t n) { return FromValue(n, TS_FIXNUM); }
 inline CP CreateFixnum(intptr_t n) { return FromValue(n, TS_FIXNUM); }
 inline CP CreateFixnum(size_t i) { return CreateFixnum((intptr_t)i); }
 
@@ -265,9 +268,9 @@ inline CP CreateFixnum(size_t i) { return CreateFixnum((intptr_t)i); }
 	inline CP CreateFixnum(int n) { return FromValue(n, TS_FIXNUM); }
 #endif
 
-inline CTypeSpec Type(CP p) { return CTypeSpec(byte(p)); }
+inline CTypeSpec Type(CP p) noexcept { return CTypeSpec(byte(p)); }
 
-inline size_t AsIndex(uintptr_t p) {
+inline size_t AsIndex(uintptr_t p) noexcept {
 	return p >> VALUE_SHIFT;
 }
 
@@ -289,7 +292,7 @@ DECLSPEC_NORETURN void E_Error();
 
 class CObMap {
 public:
-	//!!!UInt32 *m_arP[MAN_COUNT];
+	//!!!uint32_t *m_arP[MAN_COUNT];
 
 	struct CVal {
 		typedef CVal class_type;
@@ -372,7 +375,7 @@ public:
 		return _self;
 	}*/
 
-	//!!!  static int CalculateBits(UInt32 count);
+	//!!!  static int CalculateBits(uint32_t count);
 	//!!!  void CalculateBits();
 };
 
@@ -448,7 +451,7 @@ class CBignum : public CSValue {
 public:
 	BigInteger m_int;
 #if UCFG_BIGNUM=='N'		// sizeof(CBignum) should be >= 8
-	UInt32 m_dummy;
+	uint32_t m_dummy;
 #endif
 
 	CBignum(const BigInteger& i = 0)
@@ -464,12 +467,12 @@ private:
 	}
 };
 
-const UInt32 FLAG_ENTERED = 0x80000000;
+const uint32_t FLAG_ENTERED = 0x80000000;
 
 #pragma pack(push, 4)
 struct CProfInfo {
-	Int64 m_nTicks;
-	UInt32 m_nCount;
+	int64_t m_nTicks;
+	uint32_t m_nCount;
 
 	CProfInfo()
 	{}
@@ -492,7 +495,7 @@ class CProfPoint {
 public:
 	__forceinline CProfPoint(CProfInfo& profInfo) {
 		profInfo.m_nCount++;
-		if (*g_arProfEnd++ = *((UInt32*)&profInfo.m_nTicks+1) & 0x80000000 ? 0 : &profInfo)
+		if (*g_arProfEnd++ = *((uint32_t*)&profInfo.m_nTicks+1) & 0x80000000 ? 0 : &profInfo)
 			profInfo.m_nTicks -= __rdtsc();
 	}
 
@@ -512,14 +515,14 @@ public:
 
 class CQuickString {
 public:
-	typedef String::Char char_type;
+	typedef String::value_type char_type;
 	typedef char_traits<char_type> traits_type;
 
 	byte m_len,
 		m_stub;  // to align
-	String::Char m_buf[3];
-	UInt32 m_sObj;
-	String::Char m_bufStub[4];
+	String::value_type m_buf[3];
+	uint32_t m_sObj;
+	String::value_type m_bufStub[4];
 
 	CQuickString()
 		:	m_len(0)
@@ -529,7 +532,7 @@ public:
 		Init(String(p));
 	}
 
-	CQuickString(const String::Char *p) {
+	CQuickString(const String::value_type *p) {
 		Init(p);
 	}
 
@@ -555,10 +558,10 @@ public:
 
 	CQuickString& operator=(RCString s) {
 		Clear();
-		size_t len = s.Length;
+		size_t len = s.length();
 		if (len <= MAX_EMBEDDED_LEN) {
 			m_len = (byte)len;
-			Ext::StrCpy<String::Char>(m_buf, s);
+			Ext::StrCpy<String::value_type>(m_buf, s);
 		} else {
 			m_len = 255;
 			new(&m_sObj) String(s);
@@ -566,8 +569,8 @@ public:
 		return _self;
 	}
 
-	const String::Char *GetPtr() const { return m_len==255 ? (const String::Char*)(String&)m_sObj : m_buf; }
-	operator const String::Char *() const { return GetPtr(); } //!!!
+	const String::value_type *GetPtr() const { return m_len==255 ? (const String::value_type*)(String&)m_sObj : m_buf; }
+	operator const String::value_type *() const { return GetPtr(); } //!!!
 
 	operator String() const {
 		return m_len==255 ? StringRef() : m_buf;
@@ -585,7 +588,7 @@ private:
 	//!!!	static const MAX_EMBEDDED_LEN = 8;
 	static const size_t MAX_EMBEDDED_LEN;
 
-	void Init(const String::Char *p) {
+	void Init(const String::value_type *p) {
 		size_t len = traits_type::length(p);
 		if (len <= MAX_EMBEDDED_LEN) {
 			m_len = (byte)len;
@@ -606,7 +609,7 @@ inline bool operator<(const CQuickString& s1, const CQuickString& s2) {
 //!!!typedef CQuickString CLString;
 typedef String CLString;
 
-const UInt32 SYMBOL_FLAG_CONSTANT = 0x40,
+const uint32_t SYMBOL_FLAG_CONSTANT = 0x40,
 	SYMBOL_FLAG_SPECIAL = 0x20;
 //!!!            SYMBOL_FLAG_MACRO    = 0x80000000,
 //!!!            SYMBOL_FLAG_MACROLET = 0x40000000;
@@ -670,7 +673,7 @@ public:
 	bool m_bMacro         : 1;
 	bool m_bMacrolet      : 1;
 	};
-	UInt32 m_dwFlags;
+	uint32_t m_dwFlags;
 	};*/
 
 	CSymbolValue() {
@@ -686,7 +689,7 @@ public:
 	}
 
 #if !UCFG_LISP_SPLIT_SYM
-	CSymbolValue(const String::Char *s)
+	CSymbolValue(const String::value_type *s)
 		:	m_s(s)
 	{
 		*(CP*)this = 0;
@@ -719,7 +722,7 @@ private:
 class CSymbolCompare
 {
 public:
-UInt32 operator()(CSymbolValue *sv) const
+uint32_t operator()(CSymbolValue *sv) const
 {
 size_t r = 0;
 const wchar_t *p = sv->m_s;
@@ -844,11 +847,11 @@ public:
 		OutputStream::Init(m_stm.m_fstm);
 	}
 
-	Int64 get_Length() {
+	int64_t get_Length() {
 		return m_stm.Length;
 	}
 
-	Int64 Seek(Int64 offset, SeekOrigin origin) {
+	int64_t Seek(int64_t offset, SeekOrigin origin) {
 		return m_stm.Seek(offset, origin);
 	}
 
@@ -890,7 +893,7 @@ public:
 
 
 	CSPtr m_char;
-	String TrueName;
+	path TrueName;
 	int m_nStandard;
 	int m_nLine;	
 	int m_nCur, m_nEnd;
@@ -912,9 +915,9 @@ public:
 	CStreamValue();
 	void Write(BlsWriter& wr);
 	void Read(const BlsReader& rd);
-	Int64& LinePosRef();
+	int64_t& LinePosRef();
 private:
-	Int64 m_nPos;
+	int64_t m_nPos;
 };
 
 class CHashMap;
@@ -1035,7 +1038,7 @@ public:
 
 	union {
 		uintptr_t *m_pData;
-		UInt32 m_nDisplaceIndex;
+		uint32_t m_nDisplaceIndex;
 	};
 
 	byte m_stub,
@@ -1303,7 +1306,7 @@ public:
 
 	DEFPROP(bool, LogicalP);
 
-	String ToString(bool bWithoutNameExt = false);
+	path ToString(bool bWithoutNameExt = false);
 };
 
 struct CEnvironment : public CSValue {
@@ -1417,7 +1420,7 @@ enum CParamType {
 #endif
 
 
-//!!!const UInt32 FREE_FLAG = 0x80000000;
+//!!!const uint32_t FREE_FLAG = 0x80000000;
 
 class CLispGC;
 
@@ -1432,7 +1435,7 @@ public:
 		m_defaultSize,
 		m_sizeof;				 
 	CTypeSpec m_ts;
-	CInt<UInt64> m_cbFreed;
+	CInt<uint64_t> m_cbFreed;
 
 	CValueManBase(size_t defaultSize, size_t szof, CTypeSpec ts);
 	void Destroy();
@@ -1496,7 +1499,7 @@ public:
 	T *AsValue(CP p) { return Base+AsIndex(p); }
 
 	T *CreateInstance();
-	T *CreateInstance(const String::Char *s);
+	T *CreateInstance(const String::value_type *s);
 	T *CreateInstance(const BigInteger& i);
 
 	T *TryApplyCheck(size_t idx) {		//!!! rename it
@@ -1837,7 +1840,7 @@ private:
 	vector<String> LoadPaths;
 
 	DateTime m_dtStart;
-	CInt<UInt32> m_nGC;	
+	CInt<uint32_t> m_nGC;	
 	TimeSpan m_spanStartUser, m_spanGC;
 public:
 	int m_indent;
@@ -1851,13 +1854,13 @@ public:
 		m_sMescape;
 	//!!!        m_sGensymCounter;
 
-	vector<String> m_arModule;
+	vector<path> m_arModule;
 
 	int m_level;
 	String m_initDir;
 	String m_arg;
 	vector<String> m_arCommandLineArg;
-	String m_outfile,
+	path m_outfile,
 		m_destFile;
 	bool m_bInit;
 	bool m_bBuild,
@@ -1884,6 +1887,8 @@ public:
 	CSPtr m_tailedFun;
 	CP *m_pTailStack;
 	ssize_t m_nTailArgs;
+	
+	void TailRecApplyIntFunc(CP fun, ssize_t nArg);
 #endif // UCFG_LISP_TAIL_REC
 
 
@@ -1901,18 +1906,18 @@ public:
 		*m_pSPTop,
 		*m_pSP;
 
-	CPointer<CJmpBufBase> m_pJmpBuf; //!!!
+	observer_ptr<CJmpBufBase> m_pJmpBuf; //!!!
 
 	int m_nRestBinds;
 
-	CPointer<CIntFuncChain> m_pIntFuncChain;
+	observer_ptr<CIntFuncChain> m_pIntFuncChain;
 
-	CPointer<CStackRange> m_pInactiveHandlers;
+	observer_ptr<CStackRange> m_pInactiveHandlers;
 
 //!!!R	byte *m_pb;
 	//!!!  CP *m_pClosure;
 //!!!R	CSPtr CurClosure;
-	CPointer<CVMContextBase> CurVMContext;
+	observer_ptr<CVMContextBase> CurVMContext;
 
 	CP get_CurClosure() { return CurVMContext->m_closure; }
 	DEFPROP_GET(CP, CurClosure);
@@ -2001,7 +2006,7 @@ public:
 			m_nOpt,
 			m_bCL;
 		const byte *m_keywords;
-		//!!!UInt32 m_keywords;
+		//!!!uint32_t m_keywords;
 	};
 
 	struct CLispFuncR {
@@ -2618,7 +2623,7 @@ public:
 	void CollectEx();
 	void Collect();
 	void FreeReservedBuffers();
-	UInt64 GetFreedBytes();
+	uint64_t GetFreedBytes();
 
 	void CommonInit();
 	void SetPathVars();
@@ -2736,9 +2741,8 @@ public:
 	CEnvironment *NestEnv(CEnvironment& env5);
 	void CheckAllowOtherKeys(CP *pBase, size_t nArg);
 	void __fastcall ApplySubr(CP fun, ssize_t nArg);
+
 	void ApplyIntFunc(CP fun, ssize_t nArg);
-
-
 
 	void __fastcall ApplyHooked(CP fun, ssize_t nArg);
 	void __fastcall ApplyTraced(CP fun, ssize_t nArg);
@@ -2780,9 +2784,9 @@ public:
 	static inline bool IsSelfEvaluated(CP p) {
 #ifdef _MSC_VER
 #	ifdef _WIN64
-		return UInt64(_rotr64(p, VALUE_SHIFT)-1) >= 0x01FFFFFFFFFFFFFFUL;
+		return uint64_t(_rotr64(p, VALUE_SHIFT)-1) >= 0x01FFFFFFFFFFFFFFUL;
 #	else
-		return UInt32(_rotr(p, VALUE_SHIFT)-1) >= 0x01FFFFFF;
+		return uint32_t(_rotr(p, VALUE_SHIFT)-1) >= 0x01FFFFFF;
 #	endif
 #else
 		return Type(p)>TS_SYMBOL || !p;
@@ -2795,9 +2799,9 @@ public:
 	inline bool IsSelfEvaluatedAndNotHooked(CP p) {
 #ifdef _MSC_VER
 #	ifdef _WIN64
-		return UInt64(_rotr64(p, VALUE_SHIFT)-1) > m_maskEvalHook;
+		return uint64_t(_rotr64(p, VALUE_SHIFT)-1) > m_maskEvalHook;
 #	else
-		return UInt32(_rotr(p, VALUE_SHIFT)-1) > m_maskEvalHook;
+		return uint32_t(_rotr(p, VALUE_SHIFT)-1) > m_maskEvalHook;
 #	endif
 #else
 		return CP(((p>>VALUE_SHIFT)|(p<<(sizeof(CP)*8-VALUE_SHIFT)))-1) > m_maskEvalHook;
@@ -2853,30 +2857,29 @@ public:
 
 	void Eval5Env(CP form, const CEnvironment& env);
 	CP __fastcall Cons(CP a, CP b);
-	CP BignumFrom(Int64 n);
+	CP BignumFrom(int64_t n);
 	
 	CP CreateInteger(intptr_t n) {
 		return (n < FIXNUM_LIMIT && n >= -FIXNUM_LIMIT) ? CreateFixnum(n) : BignumFrom(n);
 	}
 
-	CP CreateInteger64(Int64 n);
-	CP CreateIntegerU64(UInt64 n);
+	CP CreateInteger64(int64_t n);
+	CP CreateIntegerU64(uint64_t n);
 #if UCFG_LISP_BUILTIN_RANDOM_STATE
 	CRandomState *CreateRandomState(CP seed);
 #endif
 
-	CP TimeSpanToInternalTimeUnits(const TimeSpan& span) {
-		Int64 ticks = span.Ticks;
-	#if UCFG_LISP_INTERNAL_TIME_UNITS_PER_SECOND != 10000000
-		ticks = ticks*UCFG_LISP_INTERNAL_TIME_UNITS_PER_SECOND/10000000;
-	#endif
-		return CreateInteger64(ticks);
+	template <class T, class U>
+	CP TimeSpanToInternalTimeUnits(const duration<T, U>& span) {
+		return CreateInteger64(duration_cast<UCFG_LISP_INTERNAL_TIME_UNITS_PER_SECOND>(span).count());
 	}
 
 	CP CpFromRandomState(CP rs);
-	Ext::Random FromRandomState(CP rs);
+	void FromRandomState(CP rs, default_random_engine& rngeng);
 	void ModifyRandomState(CP rs, CP p);
-	void ModifyRandomState(CP rs, const Ext::Random& random);
+	CP SerializedRandomeEngine(const default_random_engine& rneng);
+	void ModifyRandomState(CP rs, const default_random_engine& rneng);
+
 
 	CP CreateMacro(CP expander, CP lambdaList);
 	CSymbolMacro *CreateSymbolMacro(CP p);
@@ -2899,7 +2902,7 @@ public:
 	CP CreateRatio(CP num, CP den);
 	CP CreateComplex(CP real, CP imag);
 
-	CSymbolValue *CreateSymbol(const String::Char *s) {
+	CSymbolValue *CreateSymbol(const String::value_type *s) {
 		CSymbolValue *sv = m_symbolMan.CreateInstance(s);
 		sv->m_dynValue = V_U;
 		return sv;
@@ -2920,24 +2923,24 @@ public:
 	void AdjustSymbols(ssize_t offset);
 	CStreamValue *CreateStream(int subtype = STS_STREAM, CP in = 0, CP out = 0, byte flags = 0);
 	CP CreateSynonymStream(CP p);
-	CP CreatePathname(RCString path);
+	CP CreatePathname(const path& p);
 	CPathname *CopyPathname(CP p);
 	CWeakPointer *CreateWeakPointer(CP p);
 	CP CreateString(RCString s);
 	//!!!D  CP CreateOutputStringStream();
 	//!!!D  CObjectValue  *CreateObject();
 
-	static CP CreateSpecialOperator(UInt32 n, UInt32 nReq, UInt32 nOpt, UInt32 bRest) {
+	static CP CreateSpecialOperator(uint32_t n, uint32_t nReq, uint32_t nOpt, uint32_t bRest) {
 		return TS_SPECIALOPERATOR | (n<<TYPE_BITS) | (nReq<<(TYPE_BITS+10)) | (nOpt<<(TYPE_BITS+13)) | (bRest<<(TYPE_BITS+16));
 	}
 
-	static CP CreateSpecialOperator(UInt32 n);
+	static CP CreateSpecialOperator(uint32_t n);
 
-	static CP CreateSubr(UInt32 n, UInt32 nReq, UInt32 nOpt, UInt32 bRest, const byte *keywords = 0) {
+	static CP CreateSubr(uint32_t n, uint32_t nReq, uint32_t nOpt, uint32_t bRest, const byte *keywords = 0) {
 		return TS_SUBR | (n<<TYPE_BITS) | (nReq<<(TYPE_BITS+10)) | (nOpt<<(TYPE_BITS+13)) | (bRest<<(TYPE_BITS+16)) | (bool(keywords)<<(TYPE_BITS+17));
 	}
 
-	static CP CreateSubr(UInt32 n);
+	static CP CreateSubr(uint32_t n);
 
 	CIntFuncValue *CreateIntFunc() { return m_intFuncMan.CreateInstance(); }
 	CPackage *CreatePackage(RCString name, const vector<String>& nicks);
@@ -2986,9 +2989,9 @@ public:
 
 	CP GetKeyword(const CLString& s) { return GetSymbol(s, m_packKeyword); }
 
-	String FindInLISPINC(RCString filename, RCString defaultDir);
-	String SearchFile(RCString name);
-	void Load(RCString fileName, bool bBuild);
+	path FindInLISPINC(const path& filename, const path& defaultDir);
+	path SearchFile(const path& name);
+	void Load(const path& fileName, bool bBuild);
 	void F_GetFilePosition(CP args);
 	void F_MakePphelpStream();
 
@@ -3092,7 +3095,7 @@ public:
 		return symWithFlags & FLAG_DYNAMIC ? Lisp().SwapIfDynSymVal(symWithFlags, v) : v;
 	}
 
-	void PushSymbols(CPackage *pack, UInt32& n);
+	void PushSymbols(CPackage *pack, uint32_t& n);
 	void PrintValues(ostream& os);
 
 	// Special Operators
@@ -3341,7 +3344,7 @@ public:
 	pair<size_t, size_t> PopStringBoundingIndex(CP str);
 
 	CP ToUniversalTime(const DateTime& utc);
-	String FromPathnameDesignator(CP p);
+	path FromPathnameDesignator(CP p);
 	CReadtable *FromReadtableDesignator(CP p);
 	CPackage *FromPackageDesignator(CP p);
 	CP FromFunctionDesignator(CP p);
@@ -3384,7 +3387,7 @@ public:
 	CP ToDefaultPathname(CP p);
 
 	// File Functions
-	String GetDirectoryName(CP pathname);
+	path GetDirectoryName(CP pathname);
 
 	// Environment Functions
 
@@ -3615,7 +3618,7 @@ T *CValueMan<T, Tts>::CreateInstance() {
 }
 
 template <class T, CTypeSpec Tts>
-T *CValueMan<T, Tts>::CreateInstance(const String::Char *s) {
+T *CValueMan<T, Tts>::CreateInstance(const String::value_type *s) {
 	if (!m_pHeap)
 		Lisp().Collect();
 
@@ -3638,12 +3641,14 @@ T *CValueMan<T, Tts>::CreateInstance(const BigInteger& i) {
 
 
 inline CIntFuncChain::CIntFuncChain(CIntFuncValue *p) {
-	m_prev = exchange(Lisp().m_pIntFuncChain, this);
+	CLispEng& lisp = Lisp();
+	m_prev = lisp.m_pIntFuncChain.get();
+	lisp.m_pIntFuncChain.reset(this);
 	m_p = p;
 }
 
 inline CIntFuncChain::~CIntFuncChain() {
-	Lisp().m_pIntFuncChain = m_prev;
+	Lisp().m_pIntFuncChain.reset(m_prev);
 }
 
 
@@ -3904,10 +3909,14 @@ class CJmpBufBase : public CFrameBaseEx {
 public:
 	CJmpBufBase *m_pNext;
 
-	CJmpBufBase() { m_pNext = exchange(Lisp().m_pJmpBuf, this); }
+	CJmpBufBase() {
+		CLispEng& lisp = Lisp();
+		m_pNext = lisp.m_pJmpBuf;
+		lisp.m_pJmpBuf.reset(this);
+	}
 	~CJmpBufBase() { 
 		CLispEng& lisp = Lisp();
-		lisp.m_pJmpBuf = m_pNext;
+		lisp.m_pJmpBuf.reset(m_pNext);
 		base::ReleaseStack(lisp);
 	}
 
@@ -4115,7 +4124,7 @@ public:
 //#	define VM_RESTORE_CURCLOSURE CurClosure = _curClosure
 //#	define VM_RESTORE_PB m_pb = _pb
 
-#	define VM_RESTORE_CONTEXT CurVMContext = _curVMContext
+#	define VM_RESTORE_CONTEXT CurVMContext.reset(_curVMContext)
 
 
 #	define VM_CONTEXT
