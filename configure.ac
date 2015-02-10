@@ -14,7 +14,7 @@ AC_CHECK_LIB(gmp, __gmpz_init,, AC_MSG_ERROR("Library GMP not found"))
 AC_CHECK_LIB([readline], 	[history_list],	[AC_DEFINE(HAVE_READLINE), [has_readline=true]]	, [			])
 
 
-AC_CHECK_FUNCS([pthread_setname_np])
+
 
 
 

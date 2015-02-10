@@ -19,6 +19,8 @@ AC_TYPE_INT64_T
 AC_TYPE_UINT64_T
 
 
+CXXFLAGS="$CXXFLAGS -Wno-invalid-offsetof"
+
 AX_CHECK_COMPILE_FLAG([-std=c++1y], [CXXFLAGS="$CXXFLAGS -std=c++1y"], [CXXFLAGS="$CXXFLAGS -std=c++0x"])
 
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
@@ -31,19 +33,19 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
 if test "x$CLANG" = "xyes"; then
 	CXXFLAGS="$CXXFLAGS -stdlib=libc++"
 	AC_CHECK_LIB([c++abi], [__cxa_bad_cast],  	, [AC_MSG_ERROR([required libc++abi not found])					])
-	has_regex=yes
+	have_regex=yes
 fi
 
-AS_IF([test "x$has_regex" = "xyes"]
-	, 
-	,[AC_CHECK_LIB(pcre, pcre_compile,, AC_MSG_ERROR("Library PCRE not found: install libpcre3-dev / pcre-devel"))]
-)
+if ! test "x$have_regex" = "xyes"; then
+	AC_CHECK_LIB(pcre, pcre_compile,, AC_MSG_ERROR("Library PCRE not found: install libpcre3-dev / pcre-devel"))
+fi
 
-AM_CONDITIONAL(HAS_REGEX, [test "x$has_regex" = "xyes"])
+AM_CONDITIONAL(HAVE_REGEX, [test "x$have_regex" = "xyes"])
 
 
-AC_CHECK_LIB([pthread], [pthread_create],		, [AC_MSG_ERROR([Library libpthread not found])					])
-AC_SEARCH_LIBS([iconv],  [iconv], []			, [AC_MSG_ERROR([Unable to find the iconv() function])			])
+AC_CHECK_LIB([pthread], [pthread_create],	[CXXFLAGS="$CXXFLAGS -pthread"]	, [AC_MSG_ERROR([Library libpthread not found])					])
+AC_CHECK_FUNCS([pthread_setname_np])
+AC_SEARCH_LIBS([iconv],  [iconv], []										, [AC_MSG_ERROR([Unable to find the iconv() function])			])
 
 
 
@@ -59,10 +61,12 @@ AC_DEFUN([AU_PRINT_SETTINGS], [
     echo "Configuration Options Summary:"
     echo
     echo "Compilation............: make (gmake on FreeBSD)"
-    echo "  CPPFLAGS.............: $CPPFLAGS"
-    echo "  CFLAGS...............: $CFLAGS"
+    echo "  CXX................... $CXX"
+    echo "  CPPFLAGS.............. $CPPFLAGS"
+    echo "  CFLAGS................ $CFLAGS"
     echo "  CXXFLAGS.............. $CXXFLAGS"
     echo "  LIBS.................. $LIBS"
+    echo "  LDFLAGS............... $LDFLAGS"
     echo
     echo "Installation...........: make install (as root if needed, with 'su' or 'sudo')"
     echo "  prefix...............: $prefix"
