@@ -1,11 +1,8 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #pragma once
+
+#if UCFG_OLE
+#	include <el/libext/win32/ext-win.h>
+#endif
 
 #include "lispmsg.h"
 
@@ -17,7 +14,7 @@
 #	ifdef _LISPENG
 #		define LISPENG_CLASS       AFX_CLASS_EXPORT
 #	else
-#		pragma comment(lib, "lispeng.lib")
+#		pragma comment(lib, "lispeng")
 #		define LISPENG_CLASS       AFX_CLASS_IMPORT
 #	endif
 #else
@@ -45,36 +42,30 @@ enum CEnumStream {
 
 class IPutChar {
 public:
-	virtual void put(String::Char ch) =0;
+	virtual void put(String::value_type ch) =0;
 };
 
 class StandardStream : public Object, public IPutChar {
 	typedef StandardStream class_type;
 public:
 	DWORD m_flags;
-	CPointer<Ext::Encoding> Encoding;
-	Int64 m_nPos;
-	CBool m_bOwnEncoding;
+	observer_ptr<Ext::Encoding> Encoding;
+	int64_t m_nPos;
 
 	StandardStream(DWORD flags = 0)
 		:	m_flags(flags)
 		,	m_nPos(0)
 	{}
 
-	~StandardStream() {
-		if (m_bOwnEncoding)
-			delete Encoding;
-	}
-
 	virtual bool operator!() {return false;}
 	//!!!D  virtual void putback(wchar_t ch) {}
 	virtual int get();
-	virtual void put(String::Char ch);
+	virtual void put(String::value_type ch);
 	virtual int _Fileno() { return -1; }
 	virtual int ReadByte() { Throw(E_FAIL); }
 	virtual void WriteByte(byte b) { Throw(E_FAIL); }
 
-	virtual Int64 Seek(Int64 offset, SeekOrigin origin) { Throw(E_FAIL); }
+	virtual int64_t Seek(int64_t offset, SeekOrigin origin) { Throw(E_FAIL); }
 	virtual void Flush() {}
 	virtual void Close() {}
 	virtual ostream *GetOstream() { Throw(E_FAIL); }
@@ -82,8 +73,8 @@ public:
 	virtual bool Listen() { return true; } //!!!
 	virtual void ClearInput() {}
 
-	virtual Int64 get_Length() { Throw(E_FAIL); }
-	DEFPROP_VIRTUAL_GET(Int64, Length);
+	virtual int64_t get_Length() { Throw(E_FAIL); }
+	DEFPROP_VIRTUAL_GET(int64_t, Length);
 
 	virtual bool get_CanRead() { return false; }
 	DEFPROP_VIRTUAL_GET(bool, CanRead);
@@ -120,7 +111,7 @@ public:
 
 	int get();
 
-	void put(String::Char ch) override { OleCheck(m_iSS->put(ch)); }
+	void put(String::value_type ch) override { OleCheck(m_iSS->put(ch)); }
 private:
 	CComPtr<IStandardStream> m_iSS;
 };
@@ -208,12 +199,13 @@ public:
 	{}	
 
 	bool IsInteractive() { return true; }
-	int get();
+	int get() override;
 private:
-	queue<wchar_t> m_queue;	
+	deque<wchar_t> m_queue;	
 };
 
 class OutputStream : public virtual IosStream {
+	typedef IosStream base;
 public:
 	OStreamImp *m_os;
 
@@ -225,7 +217,8 @@ public:
 
 	//!!!	OStreamImp *GetOstream() { return m_os; }
 
-	void WriteByte(byte b);
+	void WriteByte(byte b) override;
+	void put(String::value_type ch) override;
 };
 
 class CPutCharOstream : public ostream {
@@ -260,7 +253,7 @@ public:
 	virtual void OnED(RCString name) { Throw(E_FAIL); } //!!!
 };
 
-typedef DWORD_PTR CP;
+typedef uintptr_t CP;
 
 class CLisp {
 	typedef CLisp class_type;
@@ -288,7 +281,7 @@ public:
 	//!!!D  CPointerArray<CTextStream> m_arStream;
 
 	CLispSink m_sink;
-	CPointer<CLispSink> m_pSink;
+	observer_ptr<CLispSink> m_pSink;
 
 	LISPENG_CLASS virtual ~CLisp();
 	LISPENG_CLASS virtual void Init(bool bBuild = false) =0;
