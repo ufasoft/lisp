@@ -1,11 +1,10 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
+
+#include EXT_HEADER_FILESYSTEM
+
+#if UCFG_WIN32
+#	include <el/libext/win32/ext-win.h>
+#endif
 
 #if UCFG_USE_POSIX
 #	include <getopt.h>
@@ -42,6 +41,7 @@ CLispEng::CLispEng()
 	:	m_bLockGC(false)
 	,	m_bShowEval(false)
 	//!!!	, m_r(m_arVal[0])
+	,	m_traceLevel(0)
 	,	m_bRun(false)
 	,	m_bTrace(false)
 	,	m_bVerbose(UCFG_DEBUG)
@@ -62,12 +62,12 @@ CLispEng::CLispEng()
 	#endif
 	,	m_locale("")
 	#if UCFG_LISP_FAST_EVAL_ATOMS == 2
-	,	m_maskEvalHook((2<<(sizeof(CP)*8-VALUE_SHIFT))-2)
+	,	m_maskEvalHook((CP(2)<<(sizeof(CP)*8-VALUE_SHIFT))-2)
 	#endif
 	//!!!   m_alloc(_self)
 {
 #if UCFG_WCE
-	m_initDir = AddDirSeparator(Path::GetDirectoryName(System.ExeFilePath));
+	m_initDir = AddDirSeparator(System.GetExeDir());
 #endif
 
 
@@ -134,7 +134,7 @@ CLispEng::CLispEng()
 
 CLispEng::~CLispEng() {
 	Clear();
-	for (int i=0; i<m_arValueMan.size(); i++)
+	for (size_t i=0; i<m_arValueMan.size(); ++i)
 		m_arValueMan[i]->Destroy();
 
 //!!!  Collect();
@@ -144,21 +144,22 @@ CLispEng::~CLispEng() {
 //!!!  delete[] m_pSPBase;
 }
 
-void CLispEng::Load(RCString fileName, bool bBuild) {
-	String ext = Path::GetExtension(fileName).ToLower();
-	String path = fileName;
+void CLispEng::Load(const path& fileName, bool bBuild) {
+	String ext = fileName.extension().native().ToLower();
+	path p = fileName;
 
 #if UCFG_USE_POSIX
-	String mypath = System.ExeFilePath;
+	path mypath = System.ExeFilePath;
 #else
-	String mypath = AfxGetModuleState()->FileName;
+	path mypath = AfxGetModuleState()->FileName;
 #endif
-	String exeDir = Path::GetDirectoryName(mypath);
-	if (ext.IsEmpty()) {
-		String bin = Path::Combine(exeDir, Path::GetFileNameWithoutExtension(fileName)+".bls");
+	path exeDir = mypath.parent_path();
+	if (ext.empty()) {
+		path bin = exeDir / fileName.stem();
+		bin += ".bls";
 		if (!(bBuild || m_bBuild)) {
-			if (File::Exists(bin))
-				path = bin;
+			if (exists(bin))
+				p = bin;
 		}
 		/*!!!
 		if (fileName.ToLower() == "init")
@@ -184,8 +185,8 @@ void CLispEng::Load(RCString fileName, bool bBuild) {
 	vector<String> arModule;
 	CBoolKeeper keeper(m_bInit);
 
-	if (Path::GetExtension(path).ToLower() == ".bls") {
-		LoadImage(path);
+	if (p.extension().native().ToLower() == ".bls") {
+		LoadImage(p);
 
 		for (int i=STM_StandardInput; i<=STM_TerminalIO; i++)
 			if (m_streams[i])
@@ -195,30 +196,33 @@ void CLispEng::Load(RCString fileName, bool bBuild) {
 		CReadFileStream fstm(path);
 		arModule = ReadBinHeader(fstm);
 		String dir = AddDirSeparator(ExtractFilePath(path));
-//!!!		for (int i=0; i<arModule.size(); i++)
-//!!!			if (FileInfo fi=(dir+arModule[i]))
-//!!!				if (fi.LastWriteTime > tmBin)
+//!!!		for (int i=0; i<arModule.size(); i++) {
+				path p = dir / arModule[i];
+				if (exists(p) && last_write_time(p) > tmBin)
 //!!!					goto out;
+			}
 		LoadMem(fstm);
 		SetVars();
 		m_arModule = arModule;*/
 	} else {
 		InitValueMans();
 		InitVars();
-		m_arModule.push_back(Path::GetFileName(path));
+		m_arModule.push_back(p.filename());
 		{
 //!!!R			CDynBindFrame bindDef(S(L_S_DEFAULT_PATHNAME_DEFAULTS), FromSValue(CreatePathname(m_initDir)), true);
-			if (!SearchFile(path))
+			if (SearchFile(p).empty())
 				Throw(E_LISP_NoInitFileFound);
-			LoadFile(path);		
+			LoadFile(p);
 		}
 		String bin;
-		if (!m_outfile.IsEmpty()) {
-			if (!m_arg.IsEmpty())
+		if (!m_outfile.empty()) {
+			if (!m_arg.empty())
 				return;
 			bin = m_outfile;
-		} else
-			bin = Path::Combine(exeDir, Path::GetFileNameWithoutExtension(fileName)+".bls");
+		} else {
+			bin = exeDir / fileName.stem();
+			bin += ".bls";
+		}
 		TRC(1, bin);
 		Ext::FileStream fs(bin, FileMode::Create, FileAccess::Write);
 		SaveMem(fs);
@@ -300,8 +304,7 @@ String CLispEng::Eval(RCString sForm) {
 void CLispEng::InstallGlobalHandlers(on_error_t onErr) {
 	if (!AsSymbol(S(L_SET_GLOBAL_HANDLER))->GetFun())
 		return;
-	switch (onErr)
-	{
+	switch (onErr) {
 	case ON_ERROR_EXIT:
 		Call(S(L_SET_GLOBAL_HANDLER), S(L_INTERRUPT_CONDITION), AsSymbol(S(L_EXITUNCONDITIONALLY))->GetFun());
 		Call(S(L_SET_GLOBAL_HANDLER), S(L_SERIOUS_CONDITION), AsSymbol(S(L_EXITONERROR))->GetFun());
@@ -348,8 +351,7 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 			if (ch == -1)
 				break;
 		//for (int ch; (ch = getopt(argc, argv, "bCc:D:hi:M:o:O:ptTU:x:?")) != -1;)
-			switch (ch)
-			{
+			switch (ch) {
 			case 0:
 				break;
 			case 'b':
@@ -384,7 +386,7 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 				arForCompile.push_back(pair<String, String>(optarg, ""));
 				break;
 			case 'o':
-				if (!arForCompile.empty() && arForCompile.back().second.IsEmpty())
+				if (!arForCompile.empty() && arForCompile.back().second.empty())
 					arForCompile.back().second = optarg;
 				else
 					m_outfile = optarg;
@@ -420,7 +422,7 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 			FileVersionInfo vi;
 			cerr << vi.FileDescription << ' ' << vi.GetProductVersionN().ToString(3) << '\t' << vi.LegalCopyright;
 			String url = TryGetVersionString(vi, "URL");
-			if (!url.IsEmpty())
+			if (!url.empty())
 				cerr << "\t" << url;
 			cerr << endl;
 			return;
@@ -433,7 +435,7 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 			ParseArgs(p);
 		}
 		Init(false);
-		bool bBatchMode = !arForCompile.empty() || !exprs.empty() || !m_arg.IsEmpty();
+		bool bBatchMode = !arForCompile.empty() || !exprs.empty() || !m_arg.empty();
 		if (bBatchMode) {
 			InstallGlobalHandlers(ON_ERROR_EXIT);
 		}
@@ -448,13 +450,13 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 			Push(m_r, S(L_K_IF_DOES_NOT_EXIST), 0);
 			Funcall(S(L_LOAD), 3);
 		}
-		for (int i=0; i<arForCompile.size(); i++) {
+		for (size_t i=0; i<arForCompile.size(); ++i) {
 			pair<String, String>& p = arForCompile[i];
 			Push(CreateString(p.first));
 			Push(S(L_K_VERBOSE));
 			Push(V_T);
 			int nArg = 3;
-			if (!p.second.IsEmpty()) {
+			if (!p.second.empty()) {
 				Push(S(L_K_OUTPUT_FILE));
 				Push(CreateString(p.second));
 				nArg += 2;
@@ -464,31 +466,31 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 				Throw(3);
 		}
 
-		for (int i=0; i<preloads.size(); i++)
+		for (size_t i=0; i<preloads.size(); ++i)
 			LoadFile(preloads[i]);
 
 		if (!exprs.empty()) {
 			String ins;
-			for (int i=0; i<exprs.size(); i++)
+			for (size_t i=0; i<exprs.size(); ++i)
 				ins += exprs[i];
 			Push(CreateString(ins), V_U, V_U);
 			F_MakeStringInputStream();
 			CDynBindFrame bindDef(S(L_S_STANDARD_INPUT), m_r, true);
 			Call(Spec(L_S_DRIVER));
-		} else if (!m_arg.IsEmpty()) {
-			if (!m_destFile.IsEmpty()) {
+		} else if (!m_arg.empty()) {
+			if (!m_destFile.empty()) {
 				Push(CreateString(m_arg));
 #if UCFG_USE_POSIX
-				String mypath = System.ExeFilePath;
+				path mypath = System.ExeFilePath;
 #else
-				String mypath = AfxGetModuleState()->FileName;
+				path mypath = AfxGetModuleState()->FileName;
 #endif
-				Push(CreateString(Path::Combine(Path::GetDirectoryName(mypath), "constub.bin")));
+				Push(CreateString(mypath.parent_path() / "constub.bin"));
 				Push(CreateString(m_destFile));
 				Funcall(GetSymbol("MAKE-EXE", m_packEXT), 3);
 			} else {
 				LoadFile(m_arg);
-				if (!m_outfile.IsEmpty()) {
+				if (!m_outfile.empty()) {
 					Ext::FileStream fs(m_outfile, FileMode::Create, FileAccess::Write);
 					SaveMem(fs);
 				}
@@ -500,7 +502,7 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 			Loop();
 	} catch (StackOverflowExc e) {
 		cerr << e << endl;		
-		exit(e.HResult);
+		exit(e.code().value());
 	}
 }
 
@@ -557,8 +559,8 @@ void CLispEng::Loop() {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
 	try {
 		Call(Spec(L_S_DRIVER));
-	} catch (RCExc e) {
-		if (e.HResult != E_EXT_NormalExit) 
+	} catch (RCExc ex) {
+		if (HResultInCatch(ex) != E_EXT_NormalExit) 
 			throw;
 	}
 }
@@ -748,13 +750,13 @@ int ComStandardStream::get() {
 #endif
 
 #if UCFG_LISP_MT
-	EXT_THREAD_PTR(CLispEng, t_pLisp);
+	EXT_THREAD_PTR(CLispEng) t_pLisp;
 #else
 	CLispEng *t_pLisp;
 #endif
 
 
-CLispEng& __stdcall GetLisp() {
+CLispEng& __stdcall GetLisp() noexcept {
 	return Lisp();
 }
 
@@ -780,8 +782,8 @@ HRESULT __stdcall LispLoad(LISPHANDLE h, const WCHAR *filename) {
 	try {
 		((CLispEng*)h)->Load(stm);
 		return 0;
-	} catch (RCExc e) {
-		return e.HResult;
+	} catch (RCExc ex) {
+		return HResultInCatch(ex);
 	}
 }
 
