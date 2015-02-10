@@ -619,7 +619,7 @@ size_t CLispEng::CheckDims(CP& dims) {
 		size_t rank = 0;
 		uint64_t total = 1;
 		for (CP q=dims, p; SplitPair(q, p); rank++) {
-			LONG_PTR n;
+			intptr_t n;
 			switch (Type(p)) {
 			case TS_FIXNUM:
 				if ((n=AsNumber(p)) >= 0)
