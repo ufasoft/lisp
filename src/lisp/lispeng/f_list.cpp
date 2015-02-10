@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -225,21 +218,22 @@ void CLispEng::F_Nconc(size_t nArgs) {
 	if (!nArgs)
 		return;
 	m_r = Pop();
-	while (--nArgs)
+	while (--nArgs) {
 		if (CP p = Pop()) {
 			if (!ConsP(p))
 				E_TypeErr(p, S(L_LIST));
 			CP r = p;
 			for (CP q; ConsP(q=Cdr(r));)
 				r = q;
-			AsCons(r)->m_cdr = SwapRet(m_r, p);
+			AsCons(r)->m_cdr = exchange(m_r, p);
 		}
+	}
 }
 
 void CLispEng::F_NReconc() {
 	m_r = Pop();
 	for (CP p=Pop(); p;)
-		m_r = SwapRet(p, SwapRet(ToCons(p)->m_cdr, m_r));
+		m_r = exchange(p, exchange(ToCons(p)->m_cdr, m_r));
 }
 
 void CLispEng::Map(CMapCB& mapCB, CP *pStack, size_t nArgs, bool bCar) {
