@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -198,8 +191,7 @@ void CLispEng::CharToStream(CP c, CP stm) {
 		wchar_t ch = AsChar(c);
 		CStreamValue *sv;
 		if (sv = CastToPPStream(stm)) {
-			switch (ch)
-			{
+			switch (ch) {
 			case '\n':
 				sv->m_bMultiLine = true;
 				ConsPPString(sv, 0);
@@ -273,8 +265,8 @@ void CLispEng::WritePChar(const char *p) {
 }
 
 void CLispEng::WriteStr(RCString s) {
-	size_t len = s.Length;
-	for (int i=0; i<len; i++)
+	size_t len = s.length();
+	for (size_t i=0; i<len; ++i)
 		WriteChar(s[i]);
 }
 
@@ -400,8 +392,7 @@ CP CLispEng::COutputStreamHandler::OnTwoWay(CP p) {
 void CLispEng::ProcessStream(CP p, IStreamHandler& sh) {
 	while (Type(p) == TS_STREAM) {
 		CStreamValue *stm = AsStream(p);
-		switch (stm->m_subtype)
-		{
+		switch (stm->m_subtype) {
 		case STS_SYNONYM_STREAM:
 			p = SymbolValue(stm->m_in);
 			continue;
@@ -427,7 +418,7 @@ void CLispEng::ProcessStream(CP p, IStreamHandler& sh) {
 			}
 			continue;
 		case STS_BROADCAST_STREAM:
-			for (CP p=stm->m_out, car; SplitPair(p, car);)
+			for (CP p1=stm->m_out, car; SplitPair(p1, car);)
 				ProcessStream(car, sh);
 			return;
 		}
@@ -507,7 +498,7 @@ void CLispEng::F_InteractiveStreamP() {
 void CLispEng::CheckFlushFileStream(CStreamValue *stm) {
 	if (stm->m_bNeedFlushOctet && stm->m_curOctet != -1) {
 		stm->m_bNeedFlushOctet = false;
-		stm->m_stream->WriteByte(byte(SwapRet(stm->m_curOctet, -1)));
+		stm->m_stream->WriteByte(byte(exchange(stm->m_curOctet, -1)));
 	}
 }
 
@@ -529,12 +520,12 @@ void CLispEng::F_FilePosition() {
 				StandardStream *ss = stm->m_stream;
 				if (m_pos == V_U) {
 					if (stm->LinePosRef() == -1) {
-						Int64 pos = ss->Seek(0, SeekOrigin::Current);
+						int64_t pos = ss->Seek(0, SeekOrigin::Current);
 						stm->LinePosRef() = pos*8/stm->m_elementBits;
 					}
 					lisp.m_r = lisp.CreateInteger64(stm->LinePosRef());
 				} else {
-					Int64 off = 0;
+					int64_t off = 0;
 					lisp.CheckFlushFileStream(stm);
 					SeekOrigin origin = SeekOrigin::Begin;
 					if (m_pos == S(L_K_START)) {
@@ -616,7 +607,7 @@ void CLispEng::F_Open() {
 		pathname = SV = m_r;
 	}
 
-	String name;
+	path name;
 	if (AsSymbol(S(L_NAMESTRING))->GetFun()) {
 		Call(S(L_NAMESTRING), pathname);
 		name = AsString(m_r);
@@ -656,11 +647,10 @@ void CLispEng::F_Open() {
 	ptr<StandardStream> pfs = fs;
 
 	if (StringP(externalFormat))
-		fs->Encoding = Encoding::GetEncoding(AsString(externalFormat));
+		fs->Encoding.reset(Encoding::GetEncoding(AsString(externalFormat)));
 	
 	FileAccess access = FileAccess::Read;
-	switch (direction)
-	{
+	switch (direction) {
 	case S(L_K_INPUT):
 	case S(L_K_INPUT_IMMUTABLE):
 	case S(L_K_PROBE):
@@ -676,8 +666,7 @@ void CLispEng::F_Open() {
 		E_TypeErr(direction, S(L_K_DIRECTION));
 	}
 
-	switch (ifExists)
-	{
+	switch (ifExists) {
 	case S(L_K_ERROR):
 	case S(L_K_NEW_VERSION):
 	case S(L_K_RENAME):
@@ -691,8 +680,7 @@ void CLispEng::F_Open() {
 		E_TypeErr(ifExists, S(L_K_IF_EXISTS));
 	}
 
-	switch (ifNotExists)
-	{
+	switch (ifNotExists) {
 	case S(L_K_ERROR):
 	case S(L_K_CREATE):
 	case 0:
@@ -706,8 +694,7 @@ void CLispEng::F_Open() {
 	FileMode mode = FileMode::Open;
 
 	if (int(access) & int(FileAccess::Write)) {
-		switch (ifExists)
-		{
+		switch (ifExists) {
 		case S(L_K_APPEND):			mode = FileMode::Append; break;
 		case S(L_K_OVERWRITE):	
 			if (ifNotExists == S(L_K_ERROR))
@@ -722,9 +709,9 @@ void CLispEng::F_Open() {
 			break;
 
 		case S(L_K_RENAME_AND_DELETE):
-			if (File::Exists(name)) {
-				String tempName = Path::GetTempFileName(Path::GetDirectoryName(name), Path::GetFileName(name)).first;
-				File::Move(name, tempName);
+			{
+				error_code ec;
+				sys::rename(name, Path::GetTempFileName(name.parent_path(), name.filename()).first, ec);
 			}
 		case S(L_K_ERROR):
 		case 0:
@@ -737,15 +724,15 @@ void CLispEng::F_Open() {
 	//!!!    if (ExtractFilePath(name) == "")
 	//!!!      name = m_initDir+name;
 	try {
-		DBG_LOCAL_IGNORE_NAME(HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), ignNotFound);
-		DBG_LOCAL_IGNORE_NAME(E_ACCESSDENIED, ignACCESSDENIED);
-		DBG_LOCAL_IGNORE_NAME(HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), ignERROR_PATH_NOT_FOUND);
+		DBG_LOCAL_IGNORE_CONDITION(errc::no_such_file_or_directory);
+		DBG_LOCAL_IGNORE(E_ACCESSDENIED);
+		DBG_LOCAL_IGNORE(HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND));
 
 		fs->Open(name, mode, access);
-	} catch (RCExc e) {
+	} catch (RCExc ex) {
 		m_r = 0;
 		if (mode == FileMode::CreateNew && ifExists || ifNotExists == S(L_K_ERROR)) {
-			E_FileErr(e.HResult, e.Message, pathname);
+			E_FileErr(HResultInCatch(ex), ex.what(), pathname);
 		}
 	}
 
@@ -793,10 +780,8 @@ void CLispEng::F_Close() {						// sys::built-in-stream-close
 			stm->m_stream = nullptr;
 		}
 		if (abort && (stm->m_mode==FileMode::Create || stm->m_mode==FileMode::CreateNew)) {
-			try {
-				File::Delete(stm->TrueName);
-			} catch (RCExc) {
-			}
+			error_code ec;
+			sys::remove(stm->TrueName);
 			m_r = V_T;		
 		}
 	}
@@ -811,8 +796,7 @@ CStreamValue *CLispEng::CheckOpened(CStreamValue *stm) {
 
 CP __fastcall CLispEng::TestIStream(CP p) {
 	p = ToOptionalNIL(p);
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 		if (p)
 			E_Error();
@@ -833,8 +817,7 @@ CP __fastcall CLispEng::TestIStream(CP p) {
 
 CP __fastcall CLispEng::TestOStream(CP p) {
 	p = ToOptionalNIL(p);
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 		if (p)
 			E_Error();
@@ -858,8 +841,7 @@ CP CLispEng::GetOutputStream(CP p) {
 		CP s = TestOStream(p);
 		if (Type(s) == TS_STREAM) {
 			CStreamValue *stm = AsStream(s);
-			switch (stm->m_subtype)
-			{
+			switch (stm->m_subtype) {
 			case STS_ECHO_STREAM:
 			case STS_TWO_WAY_STREAM:
 				p = stm->m_out;
@@ -892,7 +874,7 @@ void CLispEng::F_StreamExternalFormat() {
 	m_r = S(L_K_DEFAULT);
 }
 
-void CLispEng::ReadCharHelper(CP stm, bool bEofErr, CP eofVal, bool bRec, bool bNoHang, CP gen) {
+void CLispEng::ReadCharHelper(CP stm1, bool bEofErr, CP eofVal, bool bRec, bool bNoHang, CP gen) {
 	ClearResult();
 
 	struct CStreamHandler : public CInputStreamHandler {
@@ -937,8 +919,8 @@ void CLispEng::ReadCharHelper(CP stm, bool bEofErr, CP eofVal, bool bRec, bool b
 								int ch;
 								try {
 									ch = ts->get();
-								} catch (RCExc e) {
-									if (e.HResult == E_EXT_NormalExit)
+								} catch (RCExc ex) {
+									if (HResultInCatch(ex) == E_EXT_NormalExit)
 										throw;
 									E_Error();
 								}
@@ -953,23 +935,17 @@ void CLispEng::ReadCharHelper(CP stm, bool bEofErr, CP eofVal, bool bRec, bool b
 						stm->m_char = lisp.m_r;
 						if (AsChar(lisp.m_r) == '\n')
 							stm->m_nLine++;
-#ifdef _DEBUG //!!!D
-//						static ofstream s_ofs("\\Storage Card\\out.log");
-//						cerr.put(char(AsChar(LISP_GET_LISPREF.m_r)));
-#endif
 					}
-
 				}
-
 			}
 		}
 	} sh;
 	sh.m_bNoHang = bNoHang;
 	sh.m_gen = gen;
-	ProcessInputStream(stm, sh);
+	ProcessInputStream(stm1, sh);
 	if (m_r == S(L_K_EOF)) {
 		if (bEofErr)
-			E_EndOfFileErr(stm);
+			E_EndOfFileErr(stm1);
 		m_r = eofVal;
 	}
 }
@@ -1228,9 +1204,10 @@ void CLispEng::F_ReadByte() {
 						sv->m_curOctet = byte(b >> (restBits-bits));
 					}
 
-					if (sv->m_bSigned)
-						buf[--count] = byte((signed char)buf[count] << (8-restBits) >> (8-restBits));
-					else
+					if (sv->m_bSigned) {
+						--count;
+						buf[count] = byte((signed char)buf[count] << (8-restBits) >> (8-restBits));
+					} else
 						buf[count] = 0;
 					lisp.m_r = lisp.FromCInteger(BigInteger(buf, count+1));
 					sv->LinePosRef()++;					
@@ -1344,16 +1321,16 @@ int StandardStream::get() {
 			}
 			buf[i++] = (byte)ib;
 			try {
-				DBG_LOCAL_IGNORE_NAME(E_EXT_InvalidUTFString, ignE_EXT_InvalidUTFString);
+				DBG_LOCAL_IGNORE(E_EXT_InvalidUTF8String);
 
-				String::Char ch;
+				String::value_type ch;
 				int n = Encoding->GetChars(ConstBuf(buf, i), &ch, 1);
 				if (n == 1)
 					return ch;
 				if (n != 0)
 					Throw(E_FAIL);
 			} catch (RCExc ex) {
-				if (ex.HResult != E_EXT_InvalidUTFString)
+				if (HResultInCatch(ex) != E_EXT_InvalidUTF8String)
 					throw;
 			}
 		}
@@ -1362,14 +1339,10 @@ int StandardStream::get() {
 		return ReadByte();
 }
 
-void StandardStream::put(String::Char ch) {
+void StandardStream::put(String::value_type ch) {
 	byte buf[10];
-	size_t size;
-	if (Encoding)		
-		size = Encoding->GetBytes(&ch, 1, buf, sizeof buf);
-	else
-		memcpy(buf, &ch, size=sizeof(ch));
-	for (int i=0; i<size; ++i)
+	size_t size = (Encoding ? Encoding.get() : &Ext::Encoding::UTF8)->GetBytes(&ch, 1, buf, sizeof buf);
+	for (size_t i=0; i<size; ++i)
 		WriteByte(buf[i]);
 }
 
@@ -1377,11 +1350,10 @@ InputStream::InputStream(FILE *is) {
 	Init(is);
 	m_mode |= ios::in;
 
-	Encoding = &Ext::Encoding::Default();
+	Encoding.reset(&Ext::Encoding::Default());
 	if (is && IsInteractive()) {
 #if UCFG_WIN32_FULL
-		m_bOwnEncoding = true;
-		Encoding = new Ext::Encoding(::GetConsoleCP());
+		Encoding.reset(Ext::Encoding::GetEncoding(::GetConsoleCP()));
 #endif
 	}
 }
@@ -1398,25 +1370,39 @@ OutputStream::OutputStream(OStreamImp *os) {
 	Init(os);
 	m_mode |= ios::out;
 	
-	Encoding = &Ext::Encoding::Default();
+	Encoding.reset(&Ext::Encoding::Default());
 	if (os && IsInteractive()) {
+		Encoding = nullptr;
 #if UCFG_WIN32_FULL
-		m_bOwnEncoding = true;
-		Encoding = new Ext::Encoding(::GetConsoleOutputCP());
+//!!!		Encoding = Ext::Encoding::GetEncoding(::GetConsoleOutputCP());
 #endif
 	}
 }
 
 void OutputStream::WriteByte(byte b) {
-#ifdef _DEBUG //!!!D
-	if (!m_os)
-		E_Error();
-#endif
 	if (fputc(b, m_os) == EOF)
-		Throw(E_FAIL);
+		CCheck(-1);
 }
 
+void OutputStream::put(String::value_type ch) {
+#if UCFG_USE_POSIX
+	base::put(ch);
+#else
+	if (Encoding)
+		base::put(ch);
+	else if (fputwc(ch, m_os) == WEOF)		// fputwc() by standard does not allow to alternate wide/narrow chars
+		CCheck(-1);
+#endif
+}
+
+
 #if UCFG_USE_READLINE
+
+void ReadlineFree(void *p) {	
+#if !UCFG_WIN32		//!!!L readline5.dll uses other CRT. Memory Leak better than crash
+	free(p);
+#endif
+}
 
 int TerminalInputStream::get() {
 #if UCFG_WIN32
@@ -1426,37 +1412,40 @@ int TerminalInputStream::get() {
 #endif
 
 	int r = EOF;
+	if (m_queue.empty()) {
+		if (char *line = readline(0)) {
+			CLispEng& lisp = Lisp();
+			if (lisp.m_streams[STM_StandardInput] == this)
+				lisp.m_streams[STM_StandardOutput]->m_nPos = 0;
+			vector<wchar_t> v = Encoding::Default().GetChars(ConstBuf(line, strlen(line)));
+			m_queue.assign(v.begin(), v.end());
+			m_queue.push_back('\n');
+
+			if (line[0]) {
+				if (lisp.Spec(L_S_TERMINAL_READ_OPEN_OBJECT) != V_U) {
+					HIST_ENTRY **hist = history_list();
+					if (!hist)
+						Throw(E_FAIL);
+					while (*(hist+1))
+						++hist;
+					HIST_ENTRY *last = *hist;
+					char *new_line = (char*)malloc(2 + strlen(line) + strlen(last->line));
+					strcat(strcat(strcpy(new_line, last->line), "\n"), line);
+					ReadlineFree(exchange(last->line, new_line));
+				} else
+					add_history(line);
+			}
+			ReadlineFree(line);
+		}
+	}
 	if (!m_queue.empty()) {
 		r = m_queue.front();
-		m_queue.pop();
-	} else if (char *line = readline(0)) {
-		if (line[0]) {
-			vector<wchar_t> v = Encoding::Default().GetChars(ConstBuf(line, strlen(line)));
-			r = v[0];
-			for (int i=1; i<v.size(); ++i)
-				m_queue.push(v[i]);
-			m_queue.push('\n');
-
-			if (Lisp().Spec(L_S_TERMINAL_READ_OPEN_OBJECT) != V_U) {
-				HIST_ENTRY **hist = history_list();
-				if (!hist)
-					Throw(E_FAIL);
-				while (*(hist+1))
-					++hist;
-				HIST_ENTRY *last = *hist;
-				char *new_line = (char*)malloc(2 + strlen(line) + strlen(last->line));
-				strcat(strcat(strcpy(new_line, last->line), "\n"), line);
-				::free(SwapRet(last->line, new_line));
-			} else
-				add_history(line);
-		} else
-			r = '\n';
-		::free(line);
+		m_queue.pop_front();
 	}
 	return r;
 }
 
-#endif
+#endif // UCFG_USE_READLINE
 
 } // Lisp::
 

@@ -35,7 +35,7 @@ void CLispEng::ErrorCode(HRESULT hr, RCString s) {
 	TCHAR buf[256];
 	const char *p = s;
 	if (!FormatMessage(FORMAT_MESSAGE_FROM_HMODULE|FORMAT_MESSAGE_ARGUMENT_ARRAY, LPCVOID(AfxGetInstanceHandle()), hr, 0,
-		buf, _countof(buf), (char**)&p))
+		buf, size(buf), (char**)&p))
 		Throw(E_FAIL);
 	CPutCharOstream os = m_streams[STM_ErrorOutput]; //!!!? may be dynamic_cast
 	os << String(buf);
@@ -787,7 +787,7 @@ public:
 	}
 
 	~CHandlerKeeper() {
-		Lisp().m_pInactiveHandlers = m_range;
+		Lisp().m_pInactiveHandlers.reset(m_range);
 	}
 };
 
@@ -807,7 +807,7 @@ void CLispEng::F_InvokeHandlers() {
 					if (m_r) {
 						CHandlerKeeper handlerKeeper;
 						CStackRange newRange = { m_pStack, AsFrameTop(frame), other };
-						m_pInactiveHandlers = &newRange;
+						m_pInactiveHandlers.reset(&newRange);
 						vec = ToVector(Car(handlers));
 						if (Cdr(handlers)) {
 							m_cond = cond; //!!!

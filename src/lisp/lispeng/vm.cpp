@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 
@@ -41,7 +34,7 @@ namespace Lisp {
 #endif
 
 	CVMContextBase vmContext = { closure, (byte*)ToVector(TheClosure(closure).CodeVec)->m_pData+offset };
-	CurVMContext = &vmContext;
+	CurVMContext.reset(&vmContext);
 
 #if UCFG_LISP_PROFILE
 	PROF_POINT(TheClosure(closure).m_profInfo);
@@ -60,21 +53,17 @@ int CLispEng::ReadU() {
 		return b;  
 }
 
-LONG CLispEng::ReadS() {
-	byte b = *CurVMContext->m_pb++;
-	if (b & 0x80) {
-		short s = ((b & 0x7F)<<8) | *CurVMContext->m_pb++;
-		LONG t = LONG(DWORD(s) << 17) >> 17;
-		if (!t) {
-			byte *p = (byte*)&t;
-			p[3] = *CurVMContext->m_pb++;
-			p[2] = *CurVMContext->m_pb++;
-			p[1] = *CurVMContext->m_pb++;
-			p[0] = *CurVMContext->m_pb++;
-		}
-		return t;
+int CLispEng::ReadS() {
+	byte *pb = CurVMContext->m_pb;
+	int r = *pb++;
+	if (r & 0x80) {
+		short s = ((r & 0x7F)<<8) | *pb++;
+		r = s ? int16_t(uint16_t(s) << 1) >> 1 : 
+				(int32_t)_byteswap_ulong(GetLeUInt32((pb += 4) - 4));		
 	} else
-		return LONG(DWORD(b) << 25) >> 25;
+		r = int16_t(r << 9) >> 9;
+	CurVMContext->m_pb = pb;
+	return r;
 }
 
 void CLispEng::IgnoreS() {
@@ -84,7 +73,7 @@ void CLispEng::IgnoreS() {
 }
 
 byte *CLispEng::ReadL() {
-	LONG s = ReadS();
+	int s = ReadS();
 	return CurVMContext->m_pb+s;
 }
 
@@ -143,7 +132,7 @@ void CLispEng::C_LoadPush() {
 }
 
 CP& CLispEng::ReadKKN() {
-	DWORD k1 = ReadU(),
+	uint32_t k1 = ReadU(),
 		k2 = ReadU(),
 		n = ReadU();
 	return GetFrame(k1)[n];
@@ -669,8 +658,8 @@ void CLispEng::C_MvToStack() {
 }
 
 void CLispEng::C_NvToStack() {
-	int count = ReadU();
-	for (int i=0; i<count; i++)
+	size_t count = (size_t)ReadU();
+	for (size_t i=0; i<count; ++i)
 		Push(i<m_cVal ? m_arVal[i] : 0);
 }
 
@@ -996,7 +985,7 @@ public:
 		size_t cVal = lisp.m_cVal;
 		lisp.MvToStack();
 //!!!		CVMContextBase *_curContext = lisp.CurVMContext;
-		lisp.CurVMContext = m_pVMContext;
+		lisp.CurVMContext.reset(m_pVMContext);
 		lisp.CurVMContext->m_pb = (byte*)lisp.ToVector(lisp.TheClosure(lisp.CurClosure).CodeVec)->m_pData+m_off;
 		lisp.ContinueBytecode();
 		lisp.StackToMv(cVal);
@@ -1968,7 +1957,7 @@ if (SplitPair(args, car))
 {
 Push(args);
 Eval(car);
-args = SwapRet(*m_pStack, m_r);
+args = exchange(*m_pStack, m_r);
 }
 else
 E_Error();
@@ -1977,7 +1966,7 @@ if (SplitPair(args, car))
 {
 Push(args);
 Eval(car);
-args = SwapRet(*m_pStack, m_r);
+args = exchange(*m_pStack, m_r);
 }
 else
 Push(m_specUnbound);
@@ -2048,7 +2037,6 @@ InterpretNoKey(closure, 0, nArgs);
 
 void CLispEng::ApplyClosure(CP closure, ssize_t nArgs, CP args) {
 	LISP_TAIL_REC_KEEPER(false);
-
 
 #ifdef _X_DEBUG //!!!D
 	static int s_n;

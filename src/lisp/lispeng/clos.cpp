@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -28,8 +21,7 @@ void CLispEng::F_StdInstanceP() {
 }
 
 void CLispEng::F_FunctionP() {
-	switch (Type(Pop()))
-	{
+	switch (Type(Pop())) {
 	case TS_INTFUNC:
 	case TS_CCLOSURE:
 	case TS_SUBR:
@@ -38,8 +30,7 @@ void CLispEng::F_FunctionP() {
 }
 
 void CLispEng::F_CompiledFunctionP() {
-	switch (Type(SV))
-	{
+	switch (Type(SV)) {
 	case TS_CCLOSURE:
 		if (FuncallableInstanceP(SV))
 			break;
@@ -120,8 +111,7 @@ void CLispEng::F_ClosureP() {
 }
 
 pair<CP, CP> CLispEng::GetFunctionName(CP fun) {
-	switch (Type(fun))
-	{
+	switch (Type(fun)) {
 	case TS_INTFUNC: return pair<CP, CP>(CreateChar('C'), AsIntFunc(fun)->m_name);
 	case TS_CCLOSURE:
 		{
@@ -139,8 +129,7 @@ pair<CP, CP> CLispEng::GetFunctionName(CP fun) {
 
 CP& CLispEng::ClosureName() {
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_INTFUNC:
 		return AsIntFunc(p)->m_name;
 	default:
@@ -168,8 +157,7 @@ void CLispEng::F_RecordRef() {
 	size_t	idx = AsPositive(Pop());
 	CP p = Pop(),
 		*data;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_OBJECT:
 	case TS_STRUCT:
 		{
@@ -198,8 +186,7 @@ void CLispEng::F_RecordRef() {
 	case TS_CCLOSURE:
 		{
 			CClosure& c = TheClosure(p);
-			switch (idx)
-			{
+			switch (idx) {
 			case 0:
 				m_r = c.NameOrClassVersion;
 				return;
@@ -245,8 +232,7 @@ void CLispEng::F_RecordStore() {
 	//!!!		E_Error(); //!!!
 	CP p = Pop(),
 		*data;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_STRUCT:
 	case TS_OBJECT:		
 		if (!idx)
@@ -263,8 +249,7 @@ void CLispEng::F_RecordStore() {
 	case TS_CCLOSURE:
 		{
 			CClosure& c = TheClosure(p);
-			switch (idx)
-			{
+			switch (idx) {
 			case 0:
 				E_Error();
 			case 1:
@@ -284,8 +269,7 @@ void CLispEng::F_RecordStore() {
 void CLispEng::F_RecordLength() {
 	CP p = Pop();
 	size_t headerLen = 1;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CCLOSURE:
 		headerLen = 2;
 	case TS_OBJECT:
@@ -340,8 +324,7 @@ void CLispEng::F_ClosureSetDocumentation() {
 
 void CLispEng::F_GenericFunctionP() {
 	bool b = false;
-	switch (Type(SV))
-	{
+	switch (Type(SV)) {
 	case TS_INTFUNC: b = AsIntFunc(SV)->m_bGeneric; break;
 	case TS_CCLOSURE: b = TheClosure(SV).IsGeneric; break;
 	}
@@ -355,8 +338,7 @@ void CLispEng::F_SetFuncallableInstanceFunction() {
 		E_Error();
 	CP codevec,
 		venv;
-	switch (Type(SV))
-	{
+	switch (Type(SV)) {
 	case TS_CCLOSURE:
 		if (AsArray(SV)->DataLength <= 1) {
 			codevec = TheClosure(SV).CodeVec;
@@ -486,13 +468,13 @@ void CLispEng::F_PAllocateInstance(size_t nArgs) {
 void CLispEng::KeywordTest(CP *pStack, size_t nArgs, CP vk) {
 	if (vk == V_T)
 		return;
-	for (int i=0; i<nArgs; i+=2)
+	for (int i=0; i<(int)nArgs; i+=2)
 		if (pStack[-i-1] == S(L_K_ALLOW_OTHER_KEYS))
 			if (pStack[-i-2])
 				return;
 			else
 				break;
-	for (int i=0; i<nArgs; i+=2) {
+	for (int i=0; i<(int)nArgs; i+=2) {
 		CP key = pStack[-i-1];
 		ToSymbol(key);
 		if (key!=S(L_K_ALLOW_OTHER_KEYS) && !Memq(key, vk))
@@ -513,7 +495,7 @@ void CLispEng::F_PMakeInstance(size_t nArgs) {
 	}
 	for (CP defIA=TheClass(clas).DefaultInitargs, car; SplitPair(defIA, car);) {
 		CP key = Car(car);
-		for (int i=0; i<nArgs; i+=2)
+		for (int i=0; i<(int)nArgs; i+=2)
 			if (pStack[-i-1] == key)
 				goto LAB_FOUND;
 		Push(key);
@@ -537,7 +519,7 @@ LAB_FOUND:
 	if (CP info = GetHash(clas, Spec(L_S_MAKE_INSTANCE_TABLE))) {
 		KeywordTest(pStack, nArgs, ToVector(info)->GetElement(0));
 		Push(clas);
-		for (int i=0; i<nArgs; i++)
+		for (int i=0; i<(int)nArgs; i++)
 			Push(pStack[-1-i]);
 		Funcall(ToVector(info)->GetElement(1), nArgs+1);
 		if (ClassOf(m_r) != clas)
@@ -617,7 +599,7 @@ void CLispEng::UpdateInstance(CP p) {
 		size_t dataSize = clNew.FuncallableP ? clNew.InstanceSize-2 : clNew.InstanceSize-1;
 		byte elType = clNew.FuncallableP ? ELTYPE_BYTE : ELTYPE_T;
 		av = AsArray(p);
-		delete[] SwapRet(av->m_pData, CArrayValue::CreateData(elType, av->m_dims=CreateFixnum(dataSize), V_U));
+		delete[] exchange(av->m_pData, CArrayValue::CreateData(elType, av->m_dims=CreateFixnum(dataSize), V_U));
 		TheInstance(p).ClassVersion = newClass;
 		if (clNew.FuncallableP)
 			TheClosure(p).VEnv = 0;
@@ -636,8 +618,7 @@ static const CP g_arVecSimple[5] = {S(L_SIMPLE_VECTOR), S(L_SIMPLE_BIT_VECTOR), 
 void CLispEng::F_TypeOf() {
 	CP i;
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CHARACTER:
 		{
 			Push(p);
@@ -675,8 +656,7 @@ void CLispEng::F_TypeOf() {
 	case TS_PATHNAME:   i = AsPathname(p)->LogicalP ? S(L_LOGICAL_PATHNAME) : S(L_PATHNAME);     break;
 	case TS_WEAKPOINTER: i = S(L_WEAK_POINTER); break;
 	case TS_STREAM:
-		switch (AsStream(p)->m_subtype)
-		{
+		switch (AsStream(p)->m_subtype) {
 		case STS_SYNONYM_STREAM:		i = S(L_SYNONYM_STREAM); break;
 		case STS_TWO_WAY_STREAM:		i = S(L_TWO_WAY_STREAM); break;
 		case STS_STRING_STREAM:			i = S(L_STRING_STREAM); break;
@@ -719,8 +699,7 @@ void CLispEng::F_TypeOf() {
 void CLispEng::F_ClassOf() {
 	CP i;
 	CP p = Pop();
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CHARACTER:  i = S(L_CHARACTER);    break;
 	case TS_FIXNUM:
 	case TS_BIGNUM:
@@ -826,14 +805,12 @@ CP& CLispEng::PtrToSlot(CP inst, CP slotInfo) {
 	if (ConsP(slotInfo))
 		return ToArray(TheClassVersion(Car(slotInfo)).SharedSlots)->m_pData[AsPositive(Cdr(slotInfo))];
 	size_t idx = AsPositive(slotInfo);
-	switch (Type(inst))
-	{
+	switch (Type(inst)) {
 	case TS_OBJECT:
 	case TS_STRUCT:
 		return idx ? AsArray(inst)->m_pData[idx-1] : TheInstance(inst).ClassVersion;
 	case TS_CCLOSURE:
-		switch (idx)
-		{
+		switch (idx) {
 		case 0: return TheClosure(inst).NameOrClassVersion;
 		case 1: return TheClosure(inst).CodeVec;
 		default: return AsArray(inst)->m_pData[idx-2];
