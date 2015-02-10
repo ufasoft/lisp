@@ -686,7 +686,7 @@ void CLispEng::Lesser(CP x, CP y) {
 	switch (Type(x)) {
 	case TS_FIXNUM:
 		if (Type(y) == TS_FIXNUM) {
-			m_r = FromBool(LONG_PTR(x) < LONG_PTR(y));
+			m_r = FromBool(intptr_t(x) < intptr_t(y));
 			break;
 		}
 	case TS_BIGNUM:
