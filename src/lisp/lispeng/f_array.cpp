@@ -63,7 +63,7 @@ void CArrayValue::Dispose() {
 		cerr << "deleted m_pData == 0x0160fd08" << endl;
 #endif
 	if (!(m_flags & FLAG_Displaced))
-		Free(m_pData);
+		free(m_pData);
 }
 
 CArrayValue& CArrayValue::operator=(CArrayValue& av) {
@@ -91,7 +91,7 @@ size_t CArrayValue::ElementBitSize(byte elType) {
 	switch (elType) {
 	case ELTYPE_T: r = sizeof(CP)*8; break;
 	case ELTYPE_BIT: r = 1; break;
-	case ELTYPE_CHARACTER: r = sizeof(String::Char)*8; break;
+	case ELTYPE_CHARACTER: r = sizeof(String::value_type)*8; break;
 	case ELTYPE_BYTE:
 	case ELTYPE_BASECHAR: r = 8;
 		break;
@@ -158,7 +158,7 @@ void CArrayValue::Fill(uintptr_t *pData, byte elType, size_t beg, size_t end, CP
 		memset((byte*)pData+beg, by, end-beg);
 		break;
 	case ELTYPE_CHARACTER:
-		std::fill((String::Char*)pData+beg, (String::Char*)pData+end, String::Char(initEl ? AsChar(initEl) : 0));
+		std::fill((String::value_type*)pData+beg, (String::value_type*)pData+end, String::value_type(initEl ? AsChar(initEl) : 0));
 		break;
 	case ELTYPE_BASECHAR:
 		by = initEl ? (byte)AsChar(initEl) : 0;
@@ -244,7 +244,7 @@ void CArrayValue::Write(BlsWriter& wr) {
 			wr.Write(m_pData, (totalSize+7)/8);
 			break;
 		case ELTYPE_CHARACTER:
-			wr << String((const String::Char*)m_pData, totalSize);
+			wr << String((const String::value_type*)m_pData, totalSize);
 			break;
 		case ELTYPE_BYTE:
 		case ELTYPE_BASECHAR:
@@ -276,9 +276,9 @@ void CArrayValue::Read(const BlsReader& rd) {
 		case ELTYPE_CHARACTER:
 			{
 				String s = rd.ReadString();
-				if (s.Length != totalSize)
+				if (s.length() != totalSize)
 					Lisp().E_SeriousCondition();
-				memcpy(m_pData, (const String::Char*)s, s.Length*sizeof(String::Char));   		//!!! ASSERT(sizeof(wchat_t)==2)
+				memcpy(m_pData, (const String::value_type*)s, s.length()*sizeof(String::value_type));   		//!!! ASSERT(sizeof(wchat_t)==2)
 			}
 			break;
 		case ELTYPE_BYTE:
@@ -617,7 +617,7 @@ size_t CLispEng::CheckDims(CP& dims) {
 			return 1;
 	} else {
 		size_t rank = 0;
-		UInt64 total = 1;
+		uint64_t total = 1;
 		for (CP q=dims, p; SplitPair(q, p); rank++) {
 			LONG_PTR n;
 			switch (Type(p)) {
