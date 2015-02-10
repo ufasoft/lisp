@@ -1417,7 +1417,7 @@ int TerminalInputStream::get() {
 			CLispEng& lisp = Lisp();
 			if (lisp.m_streams[STM_StandardInput] == this)
 				lisp.m_streams[STM_StandardOutput]->m_nPos = 0;
-			vector<wchar_t> v = Encoding::Default().GetChars(ConstBuf(line, strlen(line)));
+			vector<String::value_type> v = Encoding::Default().GetChars(ConstBuf(line, strlen(line)));
 			m_queue.assign(v.begin(), v.end());
 			m_queue.push_back('\n');
 
