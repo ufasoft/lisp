@@ -23,7 +23,7 @@ const size_t SUBR_R_FUNCS = 50, //Try 64, !
 			       SUBR_OPS = 64;
 
 
-#ifdef _WIN64
+#if UCFG_64
 	const int LISP_BITS_IN_CP = 64;
 	const int CP_VALUE_BITS = 56;
 #else

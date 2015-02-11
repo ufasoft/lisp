@@ -2783,7 +2783,7 @@ public:
 
 	static inline bool IsSelfEvaluated(CP p) {
 #ifdef _MSC_VER
-#	ifdef _WIN64
+#	if UCFG_64
 		return uint64_t(_rotr64(p, VALUE_SHIFT)-1) >= 0x01FFFFFFFFFFFFFFUL;
 #	else
 		return uint32_t(_rotr(p, VALUE_SHIFT)-1) >= 0x01FFFFFF;
@@ -2798,7 +2798,7 @@ public:
 
 	inline bool IsSelfEvaluatedAndNotHooked(CP p) {
 #ifdef _MSC_VER
-#	ifdef _WIN64
+#	if UCFG_64
 		return uint64_t(_rotr64(p, VALUE_SHIFT)-1) > m_maskEvalHook;
 #	else
 		return uint32_t(_rotr(p, VALUE_SHIFT)-1) > m_maskEvalHook;

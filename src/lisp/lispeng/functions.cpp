@@ -392,7 +392,7 @@ void CLispEng::F_GenSym() {
 		sv = CreateSymbol("G"+Convert::ToString(counterBW));
 #else
 		wchar_t buf[32] = L"G";
-#	ifdef _WIN64
+#	if UCFG_64
 		_i64tow(counterBW, buf+1, 10);
 #	else
 		_itow(counterBW, buf+1, 10);
