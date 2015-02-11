@@ -17,7 +17,7 @@ public:
 	CSPtr *m_pP;
 	WORD m_nKey;
 
-	CClosureForEveryKeyword(CSPtr *pP, WORD nKey)
+	CClosureForEveryKeyword(CSPtr *pP, uint16_t nKey)
 		:	m_pP(pP)
 		,	m_nKey(nKey)
 	{}
@@ -371,7 +371,7 @@ foundFlag:
 		ifv->m_vars = FromSValue(vv);
 		ifv->m_nSpec = (byte)nSpec;
 		ifv->m_nReq = (byte)nReq;
-		ifv->m_nOpt = (WORD)nOpt;
+		ifv->m_nOpt = (uint16_t)nOpt;
 		ifv->m_nKey = (byte)nKey;
 		ifv->m_nAux = (byte)nAux;
 		NReverse(ifv->m_optInits);
@@ -569,58 +569,64 @@ void CLispEng::CheckAllowOtherKeys(CP *pBase, size_t nArg) {
 	int g_maxDeep;
 #endif
 
-void CLispEng::ApplyIntFunc(CP fun, ssize_t nArg) {
 #if UCFG_LISP_TAIL_REC
-	if (LISP_TAIL_REC_ENABLED) {
-		for (CP *p=m_pStack; p!=m_pStackTop; ++p) {
-			CP q = *p;
-			if (Type(q) == TS_FRAMEINFO) {
-				int idx = AsIndex(q);
-				CFrameType ft = CFrameType(idx & FRAME_TYPE_MASK);
-				switch (ft) {
-				case FT_APPLY:
-					m_tailedFun = fun;
-					m_nTailArgs = nArg;
-					m_pTailStack = m_pStack;
-					return;
-				case FT_VAR:
-					{
-						int nv = idx>>8;
-						for (int i=1; i<nv; ++i) {
-							CP sym = p[i];
-							if (sym & FLAG_DYNAMIC)
-								goto LAB_OUT;
-						}
-						p += nv-1;
-					}
-					break;
-				case FT_EVAL:
-				case FT_ENV1V:
-				case FT_ENV2VD:
-				case FT_ENV5:
-				case FT_ENV1B:
-				case FT_ENV1F:
-				case FT_ENV1G:
-				case FT_ITAGBODY:
-				case FT_IBLOCK:
-					break;
-				case FT_DYNBIND:
-				case FT_FUN:
-				case FT_UNWINDPROTECT:
-					goto LAB_OUT;
-				default:
-					goto LAB_OUT;
+
+void CLispEng::TailRecApplyIntFunc(CP fun, ssize_t nArg) {
+	for (CP *p=m_pStack; p!=m_pStackTop; ++p) {
+		CP q = *p;
+		if (Type(q) == TS_FRAMEINFO) {
+			int idx = AsIndex(q);
+			CFrameType ft = CFrameType(idx & FRAME_TYPE_MASK);
+			switch (ft) {
+			case FT_APPLY:
+				m_tailedFun = fun;
+				m_nTailArgs = nArg;
+				m_pTailStack = m_pStack;
+				return;
+			case FT_VAR:
+			{
+				int nv = idx>>8;
+				for (int i=1; i<nv; ++i) {
+					CP sym = p[i];
+					if (sym & FLAG_DYNAMIC)
+						goto LAB_OUT;
 				}
+				p += nv-1;
+			}
+			break;
+			case FT_EVAL:
+			case FT_ENV1V:
+			case FT_ENV2VD:
+			case FT_ENV5:
+			case FT_ENV1B:
+			case FT_ENV1F:
+			case FT_ENV1G:
+			case FT_ITAGBODY:
+			case FT_IBLOCK:
+				break;
+			case FT_DYNBIND:
+			case FT_FUN:
+			case FT_UNWINDPROTECT:
+				goto LAB_OUT;
+			default:
+				goto LAB_OUT;
 			}
 		}
-LAB_OUT:
-		LISP_TAIL_REC_ENABLED = false;
 	}
-	CP *pStack = m_pStack;
+LAB_OUT:												//!!!BUG of VS2015. Stack is not unwinded
+	LISP_TAIL_REC_ENABLED = false;
+}
+#endif // UCFG_LISP_TAIL_REC
 
+void CLispEng::ApplyIntFunc(CP fun, ssize_t nArg) {
+#if UCFG_LISP_TAIL_REC
+	if (LISP_TAIL_REC_ENABLED)
+		TailRecApplyIntFunc(fun, nArg);
+
+	CP *pStack = m_pStack;
 LAB_TAIL_RET:
-//	CStackKeeper stackKeeper(_self);
-	
+	//	CStackKeeper stackKeeper(_self);
+
 	if (m_tailedFun) {
 
 #ifdef X_DEBUG
@@ -636,10 +642,10 @@ LAB_TAIL_RET:
 		m_pStack = pStack + nArg - m_nTailArgs;
 		memmove(m_pStack, m_pTailStack, (nArg = m_nTailArgs)*sizeof(CP));
 		pStack = m_pStack;
-//!!!		LISP_TAIL_REC_ENABLED = false;
+		//!!!		LISP_TAIL_REC_ENABLED = false;
 	}
-#endif	// UCFG_LISP_TAIL_REC
 
+#endif	// UCFG_LISP_TAIL_REC
 
 #ifdef _X_TEST //!!!
 	static int base = (int)&fun;
