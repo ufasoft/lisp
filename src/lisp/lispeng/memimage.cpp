@@ -133,7 +133,7 @@ void BlsWriter::WriteCP(const CSPtr& p) {
 		}
 		break;
 	case TS_FIXNUM:
-		WriteSignedVal(ts, LONG_PTR(p)>>VALUE_SHIFT);
+		WriteSignedVal(ts, intptr_t(p)>>VALUE_SHIFT);
 		break;		
 	case TS_FRAME_PTR:
 		WriteVal(ts, AsIndex(p));
