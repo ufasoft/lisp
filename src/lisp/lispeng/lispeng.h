@@ -1134,18 +1134,18 @@ public:
 	inline CClosureHeader& get_Header();
 	DEFPROP_GET(CClosureHeader&, Header);
 
-	WORD get_NumReq() { return get_Header().m_numreq; }
-	void put_NumReq(WORD w) { get_Header().m_numreq = w; }
-	DEFPROP(WORD, NumReq);
+	uint16_t get_NumReq() { return get_Header().m_numreq; }
+	void put_NumReq(uint16_t w) { get_Header().m_numreq = w; }
+	DEFPROP(uint16_t, NumReq);
 
-	WORD get_NumOpt() { return get_Header().m_numopt; }
-	DEFPROP_GET(WORD, NumOpt);
+	uint16_t get_NumOpt() { return get_Header().m_numopt; }
+	DEFPROP_GET(uint16_t, NumOpt);
 
-	WORD get_NumKey() { return get_Header().m_numkey; }
-	DEFPROP_GET(WORD, NumKey);
+	uint16_t get_NumKey() { return get_Header().m_numkey; }
+	DEFPROP_GET(uint16_t, NumKey);
 
-	WORD get_KeyConsts() { return get_Header().m_keyconsts; }
-	DEFPROP_GET(WORD, KeyConsts);
+	uint16_t get_KeyConsts() { return get_Header().m_keyconsts; }
+	DEFPROP_GET(uint16_t, KeyConsts);
 
 	byte get_Flags() { return get_Header().m_flags; }
 	DEFPROP_GET(byte, Flags);
@@ -1180,7 +1180,7 @@ struct CIntFunc {
 		m_keywords; // at 16
 	bool m_bAllowFlag,  // at 18
 		m_bRestFlag;  // at 19
-	WORD m_nReq,
+	uint16_t m_nReq,
 		m_nOpt;
 	byte m_nSpec,       
 		m_nKey,
