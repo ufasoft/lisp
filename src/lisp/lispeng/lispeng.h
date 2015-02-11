@@ -2301,7 +2301,7 @@ public:
 	void LoadImage(RCString filename);
 	int Run();
 	void Compile(RCString name);
-	void LoadFile(RCString fileName);
+	void LoadFile(const path& p) override;
 	bool IsProperList(CP p);
 	void SaveImage(Stream& stm);
 	String Eval(RCString sForm);

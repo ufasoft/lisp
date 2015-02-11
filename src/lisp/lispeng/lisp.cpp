@@ -631,12 +631,14 @@ void CLispEng::Load(CP sym)
   Call("LOAD", sym);
 }*/
 
-void CLispEng::LoadFile(RCString path) {
+void CLispEng::LoadFile(const path& p) {
+	TRC(3, p);
+
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
 	if (CP fun = ToSymbol(S(L_LOAD))->GetFun())
-		Call(S(L_LOAD), CreateString(path));
+		Call(S(L_LOAD), CreateString(p));
 	else
-		Call(GetSymbol("_LOAD", m_packSYS), CreateString(path));
+		Call(GetSymbol("_LOAD", m_packSYS), CreateString(p));
 }
 
 class CIntIncrementor {

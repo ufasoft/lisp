@@ -291,7 +291,7 @@ public:
 	LISPENG_CLASS virtual void Load(Stream& stm) =0;
 	LISPENG_CLASS virtual void Compile(RCString name) =0;
 	LISPENG_CLASS virtual int Run() =0;
-	LISPENG_CLASS virtual void LoadFile(RCString fileName)  =0;
+	LISPENG_CLASS virtual void LoadFile(const path& p)  =0;
 	LISPENG_CLASS virtual void SaveImage(Stream& stm)  =0;
 	LISPENG_CLASS virtual String Eval(RCString sForm)  =0;
 	LISPENG_CLASS virtual CP VGetSymbol(RCString name, RCString pack = "CL-USER")  =0;
