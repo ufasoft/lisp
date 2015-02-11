@@ -776,7 +776,7 @@ void __stdcall LispClose(LISPHANDLE h) {
 	delete (CLispEng*)h;
 }
 
-HRESULT __stdcall LispLoad(LISPHANDLE h, const WCHAR *filename) {
+HRESULT __stdcall LispLoad(LISPHANDLE h, const char *filename) {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	FileStream stm(filename, FileMode::Open, FileAccess::Read);
 	try {
@@ -799,7 +799,7 @@ LISPHANDLE __stdcall LispGetCurrent() {
 }
 
 #ifdef WIN32
-BSTR __stdcall LispEval(LISPHANDLE h, const WCHAR *s) {
+BSTR __stdcall LispEval(LISPHANDLE h, const char *s) {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	CLispEng& lisp = *(CLispEng*)h;
 	return lisp.Eval(s).AllocSysString();
