@@ -1,5 +1,4 @@
 libext_FILES = 						\
-<<<<<<< HEAD
 	src/el/ext.h						\
 	src/el/extres.h						\
 	src/el/libext.h						\
@@ -69,7 +68,6 @@ libext_FILES = 						\
 	                                \
 	src/el/vc/vc-warnings.h				\
 									\
-	src/el/stl/regex.cpp				\
 	src/el/stl/regex					\
 	src/el/stl/mutex					\
 	src/el/stl/thread.cpp				\
@@ -80,86 +78,12 @@ libext_FILES = 						\
 	src/el/stl/dynamic_bitset.cpp		\
 	src/el/stl/filesystem				\
 	src/el/stl/filesystem.cpp				
-=======
-	el/ext.h						\
-	el/extres.h						\
-	el/libext.h						\
-	el/bignum.h						\
-	el/inc/default-defs.h			\
-	el/inc/ext_config.h				\
-	el/inc/extver.h					\
-	el/inc/inc_configs.h			\
-	manufacturer.h					\
-									\
-	el/libext/bignum-x86x64.asm		\
-	el/libext/afterstl.h			\
-	el/libext/bignum.cpp			\
-	el/libext/bignum386.h			\
-	el/libext/c-old.h				\
-	el/libext/cpp-old.h				\
-	el/libext/datetime.h			\
-	el/libext/ext-app.h				\
-	el/libext/ext-base.h			\
-	el/libext/ext-blob.h			\
-	el/libext/ext-core.h			\
-	el/libext/ext-safehandle.h		\
-	el/libext/ext-sync.h			\
-	el/libext/ext-cpp.h				\
-	el/libext/ext-cpu.h				\
-	el/libext/ext-fw.h				\
-	el/libext/ext-posix.h			\
-	el/libext/ext-regex.h			\
-	el/libext/ext-hash.h			\
-	el/libext/ext-lru.h				\
-	el/libext/ext-macro.h			\
-	el/libext/ext-meta.h			\
-	el/libext/ext-net.h				\
-	el/libext/ext-os.h				\
-	el/libext/ext-protocols.h		\
-	el/libext/ext-str.h				\
-	el/libext/ext-stream.h			\
-	el/libext/ext-string.h			\
-	el/libext/ext-text.cpp			\
-	el/libext/ext-thread.h			\
-	el/libext/interlocked.h			\
-	el/libext/exthelpers.h			\
-	el/libext/facilities.h			\
-	el/libext/gcc-intrinsic.h		\
-	el/libext/ext-handlers.cpp		\
-	el/libext/ext-encoding.cpp		\
-	el/libext/threader.cpp			\
-	el/libext/ext-file.cpp			\
-	el/libext/ext-fw.cpp			\
-	el/libext/datetime.cpp			\
-	el/libext/ext-base.cpp			\
-	el/libext/ext-os.cpp			\
-	el/libext/ext-app.cpp			\
-	el/libext/ext-string.cpp		\
-	el/libext/ext-blob.cpp			\
-	el/libext/ext-stream.cpp		\
-	el/libext/ext-core.cpp			\
-	el/libext/ext-ip-address.cpp	\
-	el/libext/ext-net.cpp			\
-	el/libext/stack-trace.cpp		\
-	el/libext/binary-reader-writer.h	\
-	el/libext/binary-reader-writer.cpp	\
-	el/libext/ext-posix-win.h		\
-	el/libext/vc-warnings.h			\
-	el/libext/ext-http.h			\
-									\
-	el/stl/regex.cpp				\
-	el/stl/regex					\
-	el/stl/mutex					\
-	el/stl/thread.cpp				\
-	el/stl/thread
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 
 
 lisp_SOURCES =	\
 	file_config.h					\
 	prj_config.h					\
 									\
-<<<<<<< HEAD
 	src/lisp/lispeng/fundef.h				\
 	src/lisp/lispeng/gc.h					\
 	src/lisp/lispeng/lisp.h					\
@@ -175,7 +99,7 @@ lisp_SOURCES =	\
 	src/lisp/lispeng/debug.cpp				\
 	src/lisp/lispeng/debugger.cpp			\
 	src/lisp/lispeng/eval.cpp				\
-	src/lisp/lispeng/garbagecoll.cpp			\
+	src/lisp/lispeng/gc.cpp			\
 	src/lisp/lispeng/f_array.cpp				\
 	src/lisp/lispeng/f_character.cpp			\
 	src/lisp/lispeng/f_environment.cpp		\
@@ -201,59 +125,12 @@ lisp_SOURCES =	\
 	src/lisp/lispeng/vm.cpp					\
 	src/lisp/lispeng/resource.h				\
 	src/lisp/lispeng/lispmsg.mc				\
-	src/lisp/console/lisper.cpp				\
-=======
-	src/lispeng/fundef.h				\
-	src/lispeng/gc.h					\
-	src/lispeng/lisp.h					\
-	src/lispeng/lispeng.h				\
-	src/lispeng/lisp_itf.h				\
-	src/lispeng/params.h				\
-	src/lispeng/symdef.h				\
-	src/lispeng/typedef.h				\
-	src/lispeng/messages.cpp			\
-	src/lispeng/backquote.cpp			\
-	src/lispeng/clos.cpp				\
-	src/lispeng/data.cpp               	\
-	src/lispeng/debug.cpp				\
-	src/lispeng/debugger.cpp			\
-	src/lispeng/eval.cpp				\
-	src/lispeng/garbagecoll.cpp			\
-	src/lispeng/f_array.cpp				\
-	src/lispeng/f_character.cpp			\
-	src/lispeng/f_environment.cpp		\
-	src/lispeng/f_file.cpp				\
-	src/lispeng/f_hashtable.cpp			\
-	src/lispeng/f_list.cpp				\
-	src/lispeng/f_number.cpp			\
-	src/lispeng/f_package.cpp			\
-	src/lispeng/f_pathname.cpp			\
-	src/lispeng/f_seq.cpp				\
-	src/lispeng/f_stream.cpp			\
-	src/lispeng/ffi.cpp					\
-	src/lispeng/functions.cpp			\
-	src/lispeng/lisp.cpp				\
-	src/lispeng/listutil.cpp			\
-	src/lispeng/macros.cpp				\
-	src/lispeng/memimage.cpp			\
-	src/lispeng/pretty-printer.cpp		\
-	src/lispeng/printer.cpp				\
-	src/lispeng/reader.cpp				\
-	src/lispeng/specialoperators.cpp	\
-	src/lispeng/svalue.cpp				\
-	src/lispeng/vm.cpp					\
-	src/lispeng/resource.h				\
-	src/lispeng/lispmsg.mc				\
-	src/console/lisper.cpp				\
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
-									\
-	$(libext_FILES)					
+	src/lisp/console/lisper.cpp	
 
 EXTRA_lisp_SOURCES =	\
 	am.makeinc					\
 	u-config.h						\
 									\
-<<<<<<< HEAD
 	src/el/inc/ext.ver                  \
 									\
 	src/el/x86x64.inc 					\
@@ -294,48 +171,6 @@ EXTRA_lisp_SOURCES =	\
 	src/lisp/code/uclos.lisp				\
 	src/lisp/code/utils.lisp				\
 	src/lisp/code/win32.lisp				\
-=======
-	el/inc/ext.ver                  \
-									\
-	el/comp/x86x64.inc 				\
-	el/comp/stdafx.cpp 				\
-	el/comp/ia32-codegen.cpp 		\
-	el/comp/ia32-codegen.h 			\
-									\
-	el/elwin/static-main.cpp 		\
-									\
-	el/libext/ext_messages.mc	\
-	src/code/break.lisp				\
-	src/code/byte.lisp				\
-	src/code/cffi-sys.lisp			\
-	src/code/cl.lisp				\
-	src/code/clisp.lisp				\
-	src/code/clos-class3.lisp		\
-	src/code/debug.lisp				\
-	src/code/empty.lisp				\
-	src/code/env.lisp				\
-	src/code/errorcodes.lisp		\
-	src/code/explambda.lisp			\
-	src/code/export.lisp			\
-	src/code/ext.lisp				\
-	src/code/init.lisp				\
-	src/code/macro.lisp				\
-	src/code/macros.lisp			\
-	src/code/math.lisp				\
-	src/code/opt.lisp				\
-	src/code/pass_tests.lisp		\
-	src/code/pathname.lisp			\
-	src/code/print-builtin.lisp		\
-	src/code/print.lisp				\
-	src/code/reader.lisp			\
-	src/code/restart.lisp			\
-	src/code/seq.lisp				\
-	src/code/sort.lisp				\
-	src/code/string.lisp			\
-	src/code/uclos.lisp				\
-	src/code/utils.lisp				\
-	src/code/win32.lisp				\
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 										\
 	clisp/backquote.lisp				\
 	clisp/case-sensitive.lisp			\
@@ -412,7 +247,6 @@ EXTRA_lisp_SOURCES =	\
 										\
 	mc2msg.pl							\
 										\
-<<<<<<< HEAD
 	src/el/libext/bignum386.cpp				\
 	src/el/libext/ext-os-api.cpp			\
 	src/el/libext/ext-os-api.h				\
@@ -461,58 +295,6 @@ EXTRA_lisp_SOURCES =	\
 	src/lisp/lispideui/resource.h				\
 	src/lisp/lispideui/lispideui.rc				\
 	src/lisp/lispideui/lispideui.vsct			\
-=======
-	el/libext/murmurhashaligned2.cpp	\
-	el/libext/bignum386.cpp				\
-	el/libext/ext-os-api.cpp			\
-	el/libext/ext-os-api.h				\
-	el/libext/ext-posix.cpp				\
-	                                    \
-	el/libext/win32/com-module.cpp      \
-	el/libext/win32/ext-cmd.h			\
-	el/libext/win32/ext-com.cpp			\
-	el/libext/win32/ext-com.h			\
-	el/libext/win32/ext-full-win.h 		\
-	el/libext/win32/ext-registry.cpp	\
-	el/libext/win32/ext-registry.h		\
-	el/libext/win32/ext-win.cpp			\
-	el/libext/win32/ext-win.h			\
-	el/libext/win32/extwin32.h 			\
-	el/libext/win32/excom.cpp			\
-	el/libext/win32/excom.h				\
-	el/libext/win32/ext2.cpp			\
-	el/libext/win32/getopt.cpp			\
-	                                	\
-	lisp-2012.sln						\
-	src/lispeng/lisp.vcxproj			\
-	src/lispeng/lisp.vcxproj.filters 	\
-	src/lispeng/lisp.vcproj				\
-	src/lispeng/lisp386.cpp				\
-	src/lispeng/lispeng.cpp				\
-	src/lispeng/lispeng.idl				\
-	src/lispeng/lispeng.def				\
-	src/lispeng/lispeng.rc				\
-	src/lispeng/ffi.h					\
-	src/lispeng/messages.rc 			\
-	src/lispeng/tlb.rc 					\
-											\
-	src/lispdev/lispdev.vcxproj				\
-	src/lispdev/lispdev.vcxproj.filters		\
-	src/lispdev/lispdev.cpp					\
-	src/lispdev/file_config.h				\
-	src/lispdev/lispdev.exe.manifest        \
-	src/lispdev/lispdev.rc					\
-	src/lispdev/lispdev.pkgdef				\
-	src/lispdev/lispdev.pkgundef			\
-										\
-	src/lispideui/lispideui.vcxproj			\
-	src/lispideui/lispideui.vcxproj.filters	\
-	src/lispideui/vsct.buildrule			\
-	src/lispideui/file_config.h				\
-	src/lispideui/resource.h				\
-	src/lispideui/lispideui.rc				\
-	src/lispideui/lispideui.vsct			\
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 										\
 	src/targets/lisp.props 					\
 	src/targets/lisp.targets 				\
