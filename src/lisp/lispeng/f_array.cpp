@@ -13,7 +13,7 @@ static void GSetElement(uintptr_t *pData, byte elType, ssize_t i, CP v) {
 		(*((byte*)pData+i/8) &= ~(1 << (i % 8))) |= (AsBit(v) << (i % 8));
 		break;
 	case ELTYPE_CHARACTER:
-		*((WORD*)pData+i) = AsChar(v);
+		*((uint16_t*)pData+i) = AsChar(v);
 		break;
 	case ELTYPE_BASECHAR:
 		*((byte*)pData+i) = (char)AsChar(v); //!!!
@@ -192,7 +192,7 @@ CP CArrayValue::GetElement(size_t i) {
 	case ELTYPE_BIT:
 		return CreateFixnum((*((byte*)av->m_pData+i/8)>>(i % 8)) & 1);
 	case ELTYPE_CHARACTER:
-		return CreateChar(*((WORD*)av->m_pData+i));
+		return CreateChar(*((uint16_t*)av->m_pData+i));
 	case ELTYPE_BASECHAR:
 		return CreateChar(*((byte*)av->m_pData+i));
 	case ELTYPE_BYTE:
