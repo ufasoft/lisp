@@ -1099,13 +1099,13 @@ class CClosure : public CSValue {
 	typedef CClosure class_type;
 public:
 	struct CClosureHeader {
-		WORD m_depth,
+		uint16_t m_depth,
 			m_depth_jmpbufsize,
 			m_numreq,
 			m_numopt;
 		byte m_flags,
 			m_sig;
-		WORD m_numkey,
+		uint16_t m_numkey,
 			m_keyconsts;
 	};
 
