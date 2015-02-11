@@ -1153,21 +1153,13 @@ for-value   NIL or T
     (return-from venv-search 'SPECIAL))
   (let ((from-inside-macrolet nil))
     (loop
-		(_pr (type-of venv) #'venv-search)
-		(when (compiled-function-p #'venv-search)
-			(_pr "compiled")
-			(_pr 255))
       (cond ((null venv) (return-from venv-search 'NIL))
             ((simple-vector-p venv)
-				(_pr "v-35")
-
              (do ((l (1- (length venv)))
                   (i 0 (+ i 2)))
                  ((= i l) (setq venv (svref venv i)))
-				(_pr "v-4")
                (if (eq v (svref venv i))
                  (let ((val (svref venv (1+ i))))
-					(_pr "v-5")
                    (if (and from-inside-macrolet
                             (not (eq val specdecl))
                             (not (symbol-macro-p val)))
@@ -1184,7 +1176,7 @@ for-value   NIL or T
             ((and (consp venv) (eq (car venv) 'MACROLET))
              (setq from-inside-macrolet t)
              (setq venv (cdr venv)))
-            (t (_pr "v-err") (compiler-error 'venv-search venv))))))
+            (t (compiler-error 'venv-search venv))))))
 
 ;; (venv-search-macro v) searches in *venv* for a Variable with the Symbol v.
 ;; result:

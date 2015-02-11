@@ -4,8 +4,6 @@
 
 ;; ============================================================================
 
-(_pr 1)
-
 (in-package "COMMON-LISP")
 (export '(declaim destructuring-bind complement
           constantly with-standard-io-syntax with-hash-table-iterator
@@ -22,8 +20,6 @@
      ,@(mapcar #'(lambda (decl-spec) `(PROCLAIM (QUOTE ,decl-spec))) decl-specs)
    )
 )
-
-(_pr 2)
 
 ;; ----------------------------------------------------------------------------
 
@@ -55,8 +51,6 @@
         `(LET ((<DESTRUCTURING-FORM> ,form)) ,mainform)
 ) ) ) )
 
-(_pr 3)
-
 (defun destructuring-error (destructuring-form min.max) ; ABI
   (let ((min (car min.max))
         (max (cdr min.max)))
@@ -82,8 +76,6 @@
 ;; ----------------------------------------------------------------------------
 
 ;; X3J13 vote <87>
-
-(_pr 45)
 
 (defun complement (fun)
   #'(lambda (&rest arguments) (not (apply fun arguments)))
@@ -164,15 +156,12 @@
 
 ;; ----------------------------------------------------------------------------
 
-(_pr 5)
-
 ;; Make GET-MACRO-CHARACTER work on dispatch macro characters.
 (let ((vector
         (let ((vector '#()))
           (declare (compile))
           ; This code must be in accordance with io.d:read_macro().
           (defun dispatch-reader (stream ch)
-			(_pr 52)
             (let ((arg 0)
                   subch)
               (let ((flag nil))
@@ -219,12 +208,9 @@
           (do ((i 0 (1+ i)))
                (nil)
             (when (eq (closure-const #'dispatch-reader i) vector) (return i)))))
-	(_pr 53)
     (%defio #'dispatch-reader vector-index)
   )
 )
-
-(_pr 61)
 
 ;; -------------------------------------------------------------------------
 ;; READ-SEQUENCE and WRITE-SEQUENCE are badly specified because they assume
@@ -245,8 +231,6 @@
       (T (return))))
   (stream-element-type stream))
 
-(_pr 62)
-
 (defun stream-output-element-type (stream)
   (loop
     (typecase stream
@@ -258,8 +242,6 @@
        (setq stream (two-way-stream-output-stream stream)))
       (T (return))))
   (stream-element-type stream))
-
-(_pr 63)
 
 (defun %read-sequence (sequence stream &rest rest &key (start 0) (end nil))
   (declare (ignore start end))
@@ -281,9 +263,6 @@
       (apply #'%read-sequence sequence stream rest)
       (apply 'gray::stream-read-sequence sequence stream rest)))
 
-(_pr 65)
-
-
 (defun %write-sequence (sequence stream &rest rest &key (start 0) (end nil))
   (declare (ignore start end))
   (let ((seltype (stream-output-element-type stream))
@@ -301,16 +280,11 @@
                   'write-sequence sequence stream
                   'write-char-sequence 'write-byte-sequence)))))
 
-(_pr 66)
-
-
 (defun write-sequence (sequence stream &rest rest &key (start 0) (end nil))
   (declare (ignore start end))
   (if (built-in-stream-p stream)
       (apply #'%write-sequence sequence stream rest)
       (apply 'gray::stream-write-sequence sequence stream rest)))
-
-(_pr 7)
 
 (defun trim-if (predicate sequence)
   (let ((beg (position-if-not predicate sequence)))
@@ -434,8 +408,6 @@
         (t (typespec-error 'designator thing))
 ) )
 
-(_pr 8)
-
 #-BASE-CHAR=CHARACTER
 (defun base-char-designator-p (obj) ; ABI
   (base-char-p (char (coerce obj 'string) 0))
@@ -463,8 +435,6 @@
 ;; (setf (default-directory) dir) is a Synonym for (cd dir).
 (defsetf default-directory () (value)
   `(PROGN (CD ,value) ,value))
-
-(_pr 9)
 
 ;; FORMAT-Control-String for output of dates,
 ;; applicable to a List (sec min hour day month year ...),
@@ -494,5 +464,3 @@
                            (first l) (fourth l) date-format (third l))))))))
     (if (listp pathnames) (mapc #'onedir pathnames) (onedir pathnames)))
   (values))
-
-(_pr 10)
