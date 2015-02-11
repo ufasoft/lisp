@@ -182,7 +182,7 @@ pair<byte, uintptr_t> BlsReader::ReadByteVal() const {
 		break;
 #endif
 	}
-	return pair<byte, DWORD_PTR>(b, r);
+	return pair<byte, uintptr_t>(b, r);
 }
 
 CP BlsReader::ReadVal(byte ts) const {

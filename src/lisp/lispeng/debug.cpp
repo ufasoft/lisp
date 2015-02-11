@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -16,8 +9,7 @@ namespace Lisp {
 void CLispEng::PrintList(ostream& os, CP form) {
 	Print(os, Car(form));
 	CSPtr cdr = Cdr(form);
-	switch (Type(cdr))
-	{
+	switch (Type(cdr)) {
 		/*!!!  case TS_NIL:
 		break;*/
 	case TS_CONS:
@@ -91,14 +83,14 @@ const char *g_arOpcode[256] = {
 CClosure *g_pClos;
 
 void CLispEng::ReadPrintLabel(ostream& os) {
-	LONG s = ReadS();
-	byte *p = CurVMContext->m_pb+s;
+	int s = ReadS();
+	byte *p = CurVMContext->m_pb + s;
 	int off = g_pClos->Flags & FLAG_KEY ? CCV_START_KEY : CCV_START_NONKEY;
 	os << "off=" << s << " L" << DWORD(p-(byte*)AsArray(g_pClos->CodeVec)->m_pData-off);
 }
 
 void CLispEng::PrintValues(ostream& os) {
-	for (int i=0; i<m_cVal; i++)
+	for (size_t i=0; i<m_cVal; i++)
 		Print(m_arVal[i]);
 }
 
@@ -108,8 +100,7 @@ void CLispEng::Print(ostream& os, CP form) {
 	
 	os << String(' ', m_printIndent*2);
 
-	switch (Type(form))
-	{
+	switch (Type(form)) {
 		/*!!!  case TS_NIL:
 		os << "NIL";
 		break;*/
@@ -117,8 +108,7 @@ void CLispEng::Print(ostream& os, CP form) {
 		{
 			os << "#\\";
 			wchar_t ch = AsChar(form);
-			switch (ch)
-			{
+			switch (ch) {
 			case '\0': os << "NULL"; break;
 			case '\a': os << "BELL"; break;
 			case '\b': os << "BS"; break;
@@ -184,8 +174,7 @@ void CLispEng::Print(ostream& os, CP form) {
 		os << "#C()"; //!!!
 		break;
 	case TS_CONS:
-		switch (form)
-		{
+		switch (form) {
 		case 0:
 			os << "NIL";
 			break;
@@ -266,7 +255,7 @@ void CLispEng::Print(ostream& os, CP form) {
 		else if (VectorP(form)) {
 			os << "#(";
 			CArrayValue *av = ToArray(form);
-			for (int i=0; i<av->GetVectorLength(); i++) {
+			for (size_t i=0; i<av->GetVectorLength(); i++) {
 				if (i)
 					os << " ";
 				Print(os, av->GetElement(i));
@@ -318,11 +307,11 @@ void CLispEng::Print(ostream& os, CP form) {
 void CLispEng::Disassemble(ostream& os, CP p) {
 	CClosure *c = ToCClosure(p);
 	g_pClos = c;
-	os << "\n";
+	os << "Closure " << hex << p << "\n";
 	Print(c->NameOrClassVersion);
 	os << "\nConsts:";
 	if (AsArray(p)->DataLength)
-		for (int i=0; i<AsArray(p)->DataLength; i++) {
+		for (size_t i=0; i<AsArray(p)->DataLength; ++i) {
 			os << "\n  CONST[" << i << "] = ";
 			Print(c->Consts[i]);
 		}
@@ -502,8 +491,7 @@ void CVerifier::Verify(CP p) {
 	if (val.Flag)
 		return;
 	val.Flag = true;
-	switch (ts)
-	{
+	switch (ts) {
 	case TS_FRAME_PTR:
 		Throw(E_FAIL);
 	case TS_CONS:
@@ -564,13 +552,13 @@ void CVerifier::Verify(CP p) {
 			Verify(av->m_fillPointer);
 			Verify(av->m_dims);
 			if (!av->m_displace && av->m_elType == ELTYPE_T) {
-				DWORD_PTR size = 1;
-				for (CP p=av->m_dims; p;) {
-					CConsValue *cons = Lisp().AsCons(p);
+				uintptr_t size = 1;
+				for (CP p1=av->m_dims; p1;) {
+					CConsValue *cons = Lisp().AsCons(p1);
 					size *= AsNumber(cons->m_car);
-					p = cons->m_cdr;
+					p1 = cons->m_cdr;
 				}
-				for (int i=0; i<size; i++)
+				for (size_t i=0; i<size; ++i)
 					Verify(av->m_pData[i]); 
 			}
 		}
@@ -613,7 +601,7 @@ void CLispEng::Verify(CObMap& obMap) {
 	}
 	}
 	}*/
-	for (int i=0; i<m_packageMan.m_size; i++) {
+	for (size_t i=0; i<m_packageMan.m_size; ++i) {
 		CPackage *pack = m_packageMan.Base+i;
 		if (*(byte*)pack != 0xFF) {
 			CVerifyCallback c = { &verifier };

@@ -397,8 +397,8 @@ public:
 		:	base(stm)
 	{}
 
-	DWORD_PTR ReadBytes(int n) const {
-		DWORD_PTR r = 0;
+	uintptr_t ReadBytes(int n) const {
+		uintptr_t r = 0;
 		Read(&r, n);
 		return r;
 	}
@@ -1389,7 +1389,7 @@ CArrayValue *ToObject(CP p);
 CClosure *ToCClosure(CP p);
 CMacro *ToMacro(CP p);
 String AsString(CP p);
-DWORD_PTR AsFrameTop(CP p);
+uintptr_t AsFrameTop(CP p);
 double AsFloatVal(CP p);
 
 inline CP *AsFrameTop(CP *pP) {
@@ -3627,7 +3627,7 @@ T *CValueMan<T, Tts>::CreateInstance(const String::value_type *s) {
 	Lisp().SymNameByIdx(r-Base) = s;
 	return r;
 #else
-	return ::new(exchange(m_pHeap, (T*)((DWORD_PTR*)m_pHeap)[1])) T(s);
+	return ::new(exchange(m_pHeap, (T*)((uintptr_t*)m_pHeap)[1])) T(s);
 #endif
 }
 
@@ -3635,7 +3635,7 @@ template <class T, CTypeSpec Tts>
 T *CValueMan<T, Tts>::CreateInstance(const BigInteger& i) {
 	if (!m_pHeap)
 		Lisp().Collect();
-	return ::new(exchange(m_pHeap, (T*)((DWORD_PTR*)m_pHeap)[1])) T(i);
+	return ::new(exchange(m_pHeap, (T*)((uintptr_t*)m_pHeap)[1])) T(i);
 }	
 
 

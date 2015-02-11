@@ -831,7 +831,7 @@ class LispObj : public IDispatchImpl<LispObj, ILisp> {
 
 	HRESULT __stdcall GetSymbol(BSTR name, BSTR pack, void **sym)
 	METHOD_BEGIN {
-		*sym = (void*)(DWORD_PTR)m_lisp.VGetSymbol(name, pack);
+		*sym = (void*)(uintptr_t)m_lisp.VGetSymbol(name, pack);
 	} METHOD_END
 
 	HRESULT __stdcall Call(void *sym, SAFEARRAY *psa, VARIANT *r)
@@ -840,7 +840,7 @@ class LispObj : public IDispatchImpl<LispObj, ILisp> {
 		CSafeArray sa(psa);
 		for (int i=0; i<=sa.GetUBound(); i++)
 			params.push_back(sa[i]);
-		*r = m_lisp.VCall((CP)(DWORD_PTR)sym, params).Detach();
+		*r = m_lisp.VCall((CP)(uintptr_t)sym, params).Detach();
 	} METHOD_END
 
 	HRESULT __stdcall Break(EnumSignal sig)

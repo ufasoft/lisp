@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -28,8 +21,7 @@ COleVariant CLispEng::ToOleVariant(CP p) {
 	os << endl;
 #endif
 	COleVariant r;
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_CONS:
 		if (!p)
 			r.vt = VT_NULL;
@@ -58,7 +50,7 @@ COleVariant CLispEng::ToOleVariant(CP p) {
 			COleSafeArray sa;
 			size_t len = av->GetVectorLength();
 			sa.CreateOneDim(VT_VARIANT, (DWORD)len);
-			for (long i=0; i<len; i++) {
+			for (long i=0; i<(long)len; ++i) {
 				COleVariant v = ToOleVariant(av->GetElement(i));
 				sa.PutElement(&i, &v);
 			}
@@ -90,8 +82,7 @@ CP CLispEng::FromOleVariant(const VARIANT& v) {
 		}
 		return Pop();
 	}
-	switch (v.vt)
-	{
+	switch (v.vt) {
 	case VT_NULL: return 0;
 	case VT_UI1: return CreateFixnum(v.bVal);
 	case VT_BOOL: return FromBool(v.boolVal);
@@ -125,7 +116,7 @@ COleVariant CLispEng::VCall(CP p, const vector<COleVariant>& params) {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	CLispThreadKeeper lispThreadKeeper(this);
-	for (int i=0; i<params.size(); i++)
+	for (size_t i=0; i<params.size(); ++i)
 		Push(FromOleVariant(params[i]));
 	Funcall(p, params.size());
 	return ToOleVariant(m_r);
@@ -141,12 +132,12 @@ CP CLispEng::CreatePointer(void *ptr) {
 
 void CLispEng::F_PointerAddress() {
 	void *ptr = ToPointer(Pop());
-	m_r = CreateIntegerU64((DWORD_PTR)ptr);
+	m_r = CreateIntegerU64((uintptr_t)ptr);
 }
 
 void CLispEng::F_MakePointer() {
 	BigInteger bi = ToBigInteger(Pop());
-	Int64 pv;
+	int64_t pv;
 	if (!bi.AsInt64(pv))
 		E_Error();
 	m_r = CreatePointer((void*)pv);
@@ -165,8 +156,7 @@ void CLispEng::F_ForeignFree() {
 void CLispEng::F_ForeignTypeSize() {
 	CP typ = Pop();
 	int cb;
-	switch (typ)
-	{
+	switch (typ) {
 	case S(L_K_CHAR):
 	case S(L_K_UNSIGNED_CHAR):
 	case S(L_K_UCHAR):
@@ -194,13 +184,13 @@ void CLispEng::F_ForeignTypeSize() {
 		cb = 1; break;
 	case S(L_K_INT16):
 	case S(L_K_UINT16):
-		cb = sizeof(Int16); break;
+		cb = sizeof(int16_t); break;
 	case S(L_K_INT32):
 	case S(L_K_UINT32):
-		cb = sizeof(Int32); break;
+		cb = sizeof(int32_t); break;
 	case S(L_K_INT64):
 	case S(L_K_UINT64):
-		cb = sizeof(Int64); break;
+		cb = sizeof(int64_t); break;
 	case S(L_K_FLOAT):
 		cb = sizeof(float); break;
 	case S(L_K_DOUBLE):
@@ -221,8 +211,7 @@ void CLispEng::F_ForeignTypeSize() {
 void CLispEng::F_ForeignTypeAlignment() {
 	CP typ = Pop();
 	int cb;
-	switch (typ)
-	{
+	switch (typ) {
 	case S(L_K_CHAR):
 	case S(L_K_UNSIGNED_CHAR):
 	case S(L_K_UCHAR):
@@ -249,13 +238,13 @@ void CLispEng::F_ForeignTypeAlignment() {
 		cb = 1; break;
 	case S(L_K_INT16):
 	case S(L_K_UINT16):
-		cb = __alignof(Int16); break;
+		cb = __alignof(int16_t); break;
 	case S(L_K_INT32):
 	case S(L_K_UINT32):
-		cb = __alignof(Int32); break;
+		cb = __alignof(int32_t); break;
 	case S(L_K_INT64):
 	case S(L_K_UINT64):
-		cb = __alignof(Int64); break;
+		cb = __alignof(int64_t); break;
 	case S(L_K_FLOAT):
 		cb = __alignof(float); break;
 	case S(L_K_DOUBLE):
@@ -274,7 +263,7 @@ void CLispEng::F_ForeignTypeAlignment() {
 
 int CLispEng::ToForeignInt(CP arg) {
 	BigInteger bi = ToBigInteger(arg);
-	Int64 pv;
+	int64_t pv;
 	if (!bi.AsInt64(pv))
 		E_Error();
 	return (int)pv;
@@ -284,8 +273,7 @@ void CLispEng::F_MemRef() {
 	int offset = AsNumber(ToOptional(Pop(), V_0));
 	int typ = SV;
 	byte *ptr = (byte*)ToPointer(SV1)+offset;
-	switch (typ)
-	{
+	switch (typ) {
 	case S(L_K_CHAR): m_r = CreateChar(*(char*)ptr); break;
 	case S(L_K_INT): m_r = CreateInteger64(*(int*)ptr); break;
 	case S(L_K_POINTER): m_r = CreatePointer(*(void**)ptr); break;
@@ -299,8 +287,7 @@ void CLispEng::F_MemSet() {
 	int offset = AsNumber(ToOptional(Pop(), V_0));
 	int typ = SV, val = SV2;
 	byte *ptr = (byte*)ToPointer(SV1)+offset;
-	switch (typ)
-	{
+	switch (typ) {
 	case S(L_K_CHAR):
 	case S(L_K_UNSIGNED_CHAR):
 		*(char*)ptr = Type(val)==TS_CHARACTER ? AsChar(val) : (char)AsNumber(val);
@@ -320,8 +307,7 @@ void CLispEng::WriteArg(byte *&pArgs, vector<ptr<ForeignArg> >& fargs, CP typ, C
 	Print(typ);
 	Print(arg);
 #endif
-	switch (typ)
-	{
+	switch (typ) {
 	case S(L_K_INT):
 		*(int*)pArgs = ToForeignInt(arg);
 		pArgs += sizeof(int);
@@ -418,7 +404,7 @@ void CLispEng::F_ForeignFuncall(size_t nArgs) {
 	CP *basArg = m_pStack+nArgs;
 
 	int stackSize = 0;
-	for (int i=0; i<nArgs-1; i+=2) {
+	for (int i=0; i<int(nArgs-1); i+=2) {
 		Push(basArg[-i-1]);
 		F_ForeignTypeSize();
 		stackSize += std::max((int)AsNumber(m_r), (int)sizeof(void*));
@@ -426,12 +412,11 @@ void CLispEng::F_ForeignFuncall(size_t nArgs) {
 	vector<ptr<ForeignArg> > fargs;
 	byte *pArgsBase = (byte*)alloca(stackSize),
 		  *pArgs = pArgsBase;
-	for (int i=0; i<nArgs-1; i+=2)
+	for (int i=0; i<int(nArgs-1); i+=2)
 		WriteArg(pArgs, fargs, basArg[-i-1], basArg[-i-2]);
 
-	Int64 r;
-	switch (conv)
-	{
+	int64_t r;
+	switch (conv) {
 	case S(L_K_CDECL): r = CDeclTrampoline(pArgsBase, stackSize, (PFNCDecl)pfn); break;
 	case S(L_K_STDCALL): r = StdCallTrampoline(pArgsBase, stackSize, (PFNStdcall)pfn); break;
 	default:
@@ -461,8 +446,7 @@ void *CLispEng::OnCallback(CP name, void *pArgs) {
 	byte *pb = (byte*)pArgs;
 	int nArg = 0;
 	for (CP car; SplitPair(sig, car); ++nArg) {
-		switch (car)
-		{
+		switch (car) {
 		case S(L_K_INT):
 			Push(CreateInteger(*(int*)pb));
 			pb += sizeof(int);
@@ -472,12 +456,11 @@ void *CLispEng::OnCallback(CP name, void *pArgs) {
 		}
 	}
 	Apply(fun, nArg);
-	switch (ret)
-	{
+	switch (ret) {
 	case S(L_K_INT):
 		{
 			BigInteger bi = ToBigInteger(Pop());
-			Int64 pv;
+			int64_t pv;
 			if (!bi.AsInt64(pv))
 				E_Error();
 			return (void*)pv;
@@ -513,7 +496,7 @@ void *CLispEng::CreateCallback(CP name, CP rettype, CP sig, CP conv) {
 
 #ifdef _M_IX86
 	Ia32Codegen gen(stm);
-	gen.Emit(Ia32Instr::INSTR_MOV, REG_A_CX, (Int32)name);
+	gen.Emit(Ia32Instr::INSTR_MOV, REG_A_CX, (int32_t)name);
 
 	gen.EmitByte(0x8D);			// lea edx, [esp+4]
 	gen.EmitByte(0x54);
@@ -522,8 +505,7 @@ void *CLispEng::CreateCallback(CP name, CP rettype, CP sig, CP conv) {
 
 	gen.Emit(Ia32Instr::INSTR_CALL, &CLispEng::StaticCallbackStub);
 	
-	switch (conv)
-	{
+	switch (conv) {
 	case S(L_K_CDECL): gen.Emit(Ia32Instr::INSTR_RET); break;
 	case S(L_K_STDCALL): gen.Emit(Ia32Instr::INSTR_RET, nStackSize); break;
 	default:
@@ -545,7 +527,7 @@ void CLispEng::F_CreateCallback() {
 
 void CLispEng::PrPointer(CP p) {
 	void *ptr = ToPointer(p);
-	PrOtherObj("FOREIGN-ADDRESS", "#x"+Convert::ToString(DWORD_PTR(ptr), "X"+Convert::ToString(sizeof(ptr)*2)));
+	PrOtherObj("FOREIGN-ADDRESS", "#x"+Convert::ToString(uintptr_t(ptr), "X"+Convert::ToString(sizeof(ptr)*2)));
 }
 
 void CLispEng::SaveFFI(BlsWriter& wr) {
@@ -558,7 +540,7 @@ void CLispEng::SaveFFI(BlsWriter& wr) {
 
 void CLispEng::LoadFFI(const BlsReader& rd) {
 	size_t size = rd.ReadSize();
-	for (int i=0; i<size; ++i) {
+	for (size_t i=0; i<size; ++i) {
 		String name, path;
 		rd >> name >> path;
 		CForeignLibrary *lib = new CForeignLibrary(path);
@@ -575,7 +557,7 @@ FARPROC CForeignLibrary::GetPointer(const CResID& resId) {
 }
 
 void CForeignPointer::Write(BlsWriter& wr) {
-	for (Int32 i=0; i<wr.m_vForeignLib.size(); ++i) {
+	for (uint32_t i=0; i<wr.m_vForeignLib.size(); ++i) {
 		CForeignLibrary *lib = wr.m_vForeignLib[i];
 		if ((HMODULE)lib->m_dll == m_ptr) {
 			(BinaryWriter&)wr << byte(1) << i;
@@ -588,23 +570,22 @@ void CForeignPointer::Write(BlsWriter& wr) {
 			}
 		}
 	}
-	(BinaryWriter&)wr << byte(0) << (DWORD_PTR)m_ptr;
+	(BinaryWriter&)wr << byte(0) << (uintptr_t)m_ptr;
 }
 
 void CForeignPointer::Read(const BlsReader& rd) {
 	m_type = TS_EX_FF_PTR;
 	byte bToLib = rd.ReadByte();
-	switch (bToLib)
-	{
+	switch (bToLib) {
 	case 0:
-		(BinaryReader&)rd >> (DWORD_PTR&)m_ptr;
+		(BinaryReader&)rd >> (uintptr_t&)m_ptr;
 		break;
 	case 1:
 		m_ptr = (HMODULE)rd.m_vForeignLib[rd.ReadInt32()]->m_dll;
 		break;
 	case 2:
 		{
-			Int32 nLib;
+			int32_t nLib;
 			CResID resID;
 			(BinaryReader&)rd >> nLib >> resID;
 			m_ptr = rd.m_vForeignLib[nLib]->GetPointer(resID);

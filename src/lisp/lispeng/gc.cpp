@@ -345,7 +345,7 @@ void CLispGC::ApplyCheckIntFunc(size_t idx) {
 
 void __fastcall CLispGC::ApplyCheckSValue(CP p) {
 	while (true) {
-		DWORD_PTR idx = AsIndex(p);
+		uintptr_t idx = AsIndex(p);
 		switch (Type(p)) {
 		case TS_CONS:          // Special case without m_type field
 		case TS_RATIO:

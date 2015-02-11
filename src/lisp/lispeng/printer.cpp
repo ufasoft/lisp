@@ -49,7 +49,7 @@ LAB_START:
 }
 
 void CLispEng::ApplyMarkSValue(CMarkSweepHandler& h, CP& p, bool bMark) {
-	DWORD_PTR idx = AsIndex(p);
+	uintptr_t idx = AsIndex(p);
 	if (!h.OnApply(p, bMark))
 		return;
 	switch (Type(p))

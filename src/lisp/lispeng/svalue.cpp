@@ -270,7 +270,7 @@ CFrameType AsFrameType(CP p) {
 	Lisp().Error(E_LISP_BadArgumentType, p);
 }
 
-DWORD_PTR AsFrameTop(CP p) {
+uintptr_t AsFrameTop(CP p) {
 	if (Type(p) == TS_FRAMEINFO)
 		return AsIndex(p) >> 8;
 	Lisp().Error(E_LISP_BadArgumentType, p);
