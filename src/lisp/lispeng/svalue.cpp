@@ -524,12 +524,12 @@ void CIntFuncValue::Write(BlsWriter& wr) {
 		<< m_optInits << m_keywords << m_keyInits << m_auxInits;
 	(BinaryWriter&)wr << m_nReq << m_nOpt << m_nSpec << m_nKey << m_nAux << m_bAllowFlag << m_bRestFlag;
 	if (m_varFlags) {
-		WORD count = WORD(Lisp().ToArray(m_vars)->TotalSize()-m_nSpec);
+		uint16_t count = uint16_t(Lisp().ToArray(m_vars)->TotalSize()-m_nSpec);
 		(BinaryWriter&)wr << count;
 		for (int i=0; i<count; i++)
 			(BinaryWriter&)wr << m_varFlags[i];
 	} else
-		(BinaryWriter&)wr << WORD(0);
+		(BinaryWriter&)wr << uint16_t(0);
 }
 
 void CIntFuncValue::Read(const BlsReader& rd) {
@@ -684,14 +684,14 @@ void CBignum::Write(BlsWriter& wr) {
 }
 
 BlsWriter& operator<<(BlsWriter& wr, const CCharType& ct) {
-	(BinaryWriter&)wr << (byte)ct.m_syntax << (WORD)ct.m_traits << (byte)ct.m_bTerminating;
+	(BinaryWriter&)wr << (byte)ct.m_syntax << (uint16_t)ct.m_traits << (byte)ct.m_bTerminating;
 	wr << ct.m_macro << ct.m_disp;
 	return wr;
 }
 
 const BlsReader& operator>>(const BlsReader& rd, CCharType& ct) {
 	byte syntax, bTerminating;
-	WORD traits;
+	uint16_t traits;
 	rd >> syntax >> traits >> bTerminating;
 	rd >> ct.m_macro >> ct.m_disp;
 	ct.m_syntax = (CSyntaxType)syntax;
