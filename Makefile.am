@@ -13,11 +13,11 @@ bindatadir = $(bindir)
 dist_lisp_SOURCES = ext_messages.h
 nodist_lisp_SOURCES = lispmsg.h
 
-if BUILD_LIBEXT
 lisp_DEPENDENCIES = lisp.cat
 
 bindata_DATA= lisp.cat init.bls
 
+if BUILD_LIBEXT
 
 	lisp_SOURCES += $(libext_FILES)
 
@@ -38,7 +38,12 @@ lisp.cat : ext_messages.msg lispmsg.msg
 
 else
 
-bindata_DATA=  init.bls
+lisp.cat : lispmsg.msg
+	gencat --new -o $@ $^
+
+lispmsg.msg lispmsg.h : src/lisp/lispeng/lispmsg.mc
+	perl mc2msg.pl -h . $<
+
 
 endif
 
