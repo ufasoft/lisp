@@ -1,10 +1,3 @@
-/*######     Copyright (c) 1997-2012 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com    ##########################################
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published #
-# by the Free Software Foundation; either version 3, or (at your option) any later version. This program is distributed in the hope that #
-# it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. #
-# See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this #
-# program; If not, see <http://www.gnu.org/licenses/>                                                                                    #
-########################################################################################################################################*/
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -82,7 +75,7 @@ void CLispEng::ApplyMarkSValue(CMarkSweepHandler& h, CP& p, bool bMark) {
 						Print(av->m_pData[i]);
 					}
 #endif
-				for (int i=0; i<size; i++)
+				for (size_t i=0; i<size; ++i)
 					ApplyMark(h, av->m_pData[i], bMark); 
 			}
 		}
@@ -126,8 +119,7 @@ CP CLispEng::GetCircularities(CP p) {
 			   m_bPrintClosure;
 
 		bool OnApply(CP p, bool bMark) {
-			switch (Type(p))
-			{
+			switch (Type(p)) {
 			case TS_ARRAY: return m_bPrintArray;
 			case TS_CCLOSURE:
 				{
@@ -145,8 +137,7 @@ CP CLispEng::GetCircularities(CP p) {
 		void OnMark(CP p, bool bAlreadyMarked) {
 			if (bAlreadyMarked) {
 				CLispEng& lisp = LISP_GET_LISPREF;
-				switch (Type(p))
-				{
+				switch (Type(p)) {
 				case TS_SYMBOL:
 					if (lisp.AsSymbol(p)->HomePackage)
 						return;
@@ -409,7 +400,7 @@ void CLispEng::PrString(CP p) {
 	size_t len = AsArray(p)->GetVectorLength();
 	if (Spec(L_S_PRINT_READABLY) || Spec(L_S_PRINT_ESCAPE)) {
 		WriteChar('\"');
-		for (int i=0; i<len; i++) {
+		for (size_t i=0; i<len; ++i) {
 			CP c = AsArray(p)->GetElement(i);
 			if (c==V_BACKSLASH || c==V_DQUOTE)
 				WriteChar('\\');
@@ -418,14 +409,14 @@ void CLispEng::PrString(CP p) {
 		WriteChar('\"');
 	}
 	else
-		for (int i=0; i<len; i++)
+		for (size_t i=0; i<len; ++i)
 			WriteChar(AsChar(AsArray(p)->GetElement(i)));
 }
 
 void CLispEng::PrBitVector(CP p) {
 	size_t len = AsArray(p)->GetVectorLength();
 	WritePChar("#*");
-	for (int i=0; i<len; i++)
+	for (size_t i=0; i<len; ++i)
 		WriteChar('0'+int(AsArray(p)->GetElement(i)!=V_0));
 }
 
@@ -459,16 +450,14 @@ void CLispEng::PrintInt(CP pn, int base) {
 }
 
 void CLispEng::PrRealNumber(CP p) {
-	switch (Type(p))
-	{
+	switch (Type(p)) {
 	case TS_FIXNUM:
 	case TS_BIGNUM:
 	case TS_RATIO:
 		{
 			int base = TestRadix(Spec(L_S_PRINT_BASE));
 			if (Spec(L_S_PRINT_READABLY) || Spec(L_S_PRINT_RADIX))
-				switch (base)
-				{
+				switch (base) {
 				case 2: WritePChar("#b"); break;
 				case 8: WritePChar("#o"); break;
 				case 16: WritePChar("#x"); break;
@@ -503,8 +492,8 @@ void CLispEng::PrRealNumber(CP p) {
 }
 
 void CLispEng::WriteUpDownStr(RCString s, FPLispFunc pfnConv) {
-	size_t len = s.Length;
-	for (int i=0; i<len; i++) {
+	size_t len = s.length();
+	for (size_t i=0; i<len; ++i) {
 		Push(CreateChar(s[i]));
 		(this->*pfnConv)();
 		WriteChar(AsChar(m_r));
@@ -520,9 +509,9 @@ void CLispEng::WriteDowncaseStr(RCString s) {
 }
 
 void CLispEng::WriteCapitalizeStr(RCString s, FPLispFunc pfnConv) {
-	size_t len = s.Length;
+	size_t len = s.length();
 	bool bFlag = false;
-	for (int i=0; i<len; i++) {
+	for (size_t i=0; i<len; ++i) {
 		bool bOld = bFlag;
 		CP c = CreateChar(s[i]);
 		Push(c);
@@ -538,11 +527,9 @@ void CLispEng::WriteCapitalizeStr(RCString s, FPLispFunc pfnConv) {
 
 void CLispEng::WriteCaseString(RCString s) {
 	CP cas = GetReadtable()->m_case;
-	switch (cas)
-	{
+	switch (cas) {
 	case S(L_K_UPCASE):
-		switch (Spec(L_S_PRINT_CASE))
-		{
+		switch (Spec(L_S_PRINT_CASE)) {
 		case S(L_K_UPCASE):
 			WriteStr(s);
 			break;
@@ -557,8 +544,7 @@ void CLispEng::WriteCaseString(RCString s) {
 		}
 		break;
 	case S(L_K_DOWNCASE):
-		switch (Spec(L_S_PRINT_CASE))
-		{
+		switch (Spec(L_S_PRINT_CASE)) {
 		case S(L_K_UPCASE):
 			WriteUpcaseStr(s);
 			break;
@@ -574,10 +560,10 @@ void CLispEng::WriteCaseString(RCString s) {
 		break;
 	case S(L_K_INVERT):
 		{
-			size_t len = s.Length;
+			size_t len = s.length();
 			bool bSeenUpper = false,
 					 bSeenLower = false;
-			for (int i=0; i<len; i++) {
+			for (size_t i=0; i<len; ++i) {
 				CP c = CreateChar(s[i]);
 				Push(c);
 				F_CharUpcase();
@@ -603,10 +589,9 @@ void CLispEng::WriteCaseString(RCString s) {
 
 void CLispEng::WriteEscapeName(RCString s) {
 	WriteChar('|');
-	size_t len = s.Length;
-	for (int i=0; i<len; i++) {
-		switch (wchar_t ch = s[i])
-		{
+	size_t len = s.length();
+	for (size_t i=0; i<len; ++i) {
+		switch (wchar_t ch = s[i]) {
 		case '|':
 		case '\\':
 			WriteChar('\\');
@@ -619,18 +604,17 @@ void CLispEng::WriteEscapeName(RCString s) {
 
 void CLispEng::PrSymbolPart(RCString s) {
 	if (!Spec(L_S_PRINT_READABLY))
-		if (size_t len = s.Length) {
+		if (size_t len = s.length()) {
 			wchar_t ch = s[0];
 			CCharType ct = GetCharType(ch);
 			if (ct.m_syntax == ST_CONSTITUENT) {
 				CP cas = GetReadtable()->m_case;
-				int i = 0;
+				size_t i = 0;
 				while (true) {
 					if (ct.m_traits & TRAIT_PACKAGE)
 						goto LAB_ESCAPED;
 					CP c = CreateChar(ch);
-					switch (cas)
-					{
+					switch (cas) {
 					case S(L_K_UPCASE):
 						Push(c);
 						F_CharUpcase();
@@ -653,8 +637,7 @@ void CLispEng::PrSymbolPart(RCString s) {
 						break;
 					ch = s[i];
 					ct = GetCharType(ch);
-					switch (ct.m_syntax)
-					{
+					switch (ct.m_syntax) {
 					case ST_CONSTITUENT:
 					case ST_MACRO: //!!! Not-terminating must be
 						break;
@@ -663,7 +646,7 @@ void CLispEng::PrSymbolPart(RCString s) {
 					}
 				}
 				CTokenVec vec;
-				for (int i=0; i<len; i++) {
+				for (size_t i=0; i<len; ++i) {
 					wchar_t ch = s[i];
 					CCharType ct = GetCharType(ch);
 					vec.push_back(CCharWithAttrs(ch, true, ct.m_traits));
