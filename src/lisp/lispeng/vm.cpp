@@ -1931,7 +1931,7 @@ void __fastcall CLispEng::MatchClosureKey(CP closure, ssize_t nArgs, CP *pKeys, 
 	}
 	nArgs >>= 1;
 	CClosure *c = ToCClosure(closure);
-	WORD nKey = c->NumKey;
+	uint16_t nKey = c->NumKey;
 	CP *pKeyConst = (c->Flags & FLAG_GENERIC ? ToVector(c->Consts[0])->m_pData : c->Consts)+c->KeyConsts;
 	for (int i=0; i<nKey; i++) {
 		CP key = pKeyConst[i],
