@@ -1958,10 +1958,10 @@ public:
 
 	struct CCharWithAttrs {
 		wchar_t m_ch;
-		WORD m_traits;
+		uint16_t m_traits;
 		bool m_bReplaceable : 1;
 
-		CCharWithAttrs(wchar_t ch = 0, bool bReplaceable = false, WORD traits = TRAIT_INVALID)
+		CCharWithAttrs(wchar_t ch = 0, bool bReplaceable = false, uint16_t traits = TRAIT_INVALID)
 			:	m_ch(ch)
 			,	m_bReplaceable(bReplaceable)
 			,	m_traits(traits)
