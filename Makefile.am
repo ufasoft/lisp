@@ -8,9 +8,10 @@ include am.makeinc
 
 
 bin_PROGRAMS = lisp
-lisp_DEPENDENCIES = lisp.cat
+#lisp_DEPENDENCIES = lisp.cat
 
-bindata_DATA= lisp.cat init.bls
+#bindata_DATA= lisp.cat init.bls
+bindata_DATA=  init.bls
 bindatadir = $(bindir)
 
 dist_lisp_SOURCES = ext_messages.h
