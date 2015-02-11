@@ -15,7 +15,7 @@ protected:
 	void Start();
 public:
 	CSPtr *m_pP;
-	WORD m_nKey;
+	uint16_t m_nKey;
 
 	CClosureForEveryKeyword(CSPtr *pP, uint16_t nKey)
 		:	m_pP(pP)
