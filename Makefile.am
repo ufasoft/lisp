@@ -1,20 +1,8 @@
 build=@build@
 
-<<<<<<< HEAD
 AM_CPPFLAGS=-I src -pthread 
-AM_CXXFLAGS=-include src/el/ext.h
+#AM_CXXFLAGS=-include src/el/ext.h
 
-if CLANG
-=======
-AM_CPPFLAGS=-pthread -std=c++0x
-AM_CXXFLAGS=-include el/ext.h
-
-if CLANG
-AM_CXXFLAGS += -mno-sse
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
-else
-AM_CXXFLAGS += -Wno-invalid-offsetof 
-endif
 
 include am.makeinc
 
@@ -25,40 +13,30 @@ lisp_DEPENDENCIES = lisp.cat
 bindata_DATA= lisp.cat init.bls
 bindatadir = $(bindir)
 
-<<<<<<< HEAD
 dist_lisp_SOURCES = ext_messages.h
 nodist_lisp_SOURCES = lispmsg.h
 
-BUILT_SOURCES =$(nodist_lisp_SOURCES) src/el/ext.h.gch
+if BUILD_LIBEXT
+	lisp_SOURCES += $(libext_FILES)
+endif
 
-src/el/ext.h.gch: src/el/ext.h
-	$(CXXCOMPILE) $(CXXFLAGS) -x c++-header $<
+BUILT_SOURCES =$(nodist_lisp_SOURCES) #src/el/ext.h.gch
 
-ext_messages.msg h/ext_messages.h : src/el/libext/ext_messages.mc
-	-mkfir h
-	perl mc2msg.pl -h h $<
-	cp h/ext_messages.msg .
 
-lispmsg.msg lispmsg.h : src/lisp/lispeng/lispmsg.mc
-=======
-nodist_lisp_SOURCES = ext_messages.h lispmsg.h
+#src/el/ext.h.gch: src/el/ext.h
+#	$(CXXCOMPILE) $(CXXFLAGS) -x c++-header $<
 
-BUILT_SOURCES =$(nodist_lisp_SOURCES) el/ext.h.gch
+#ext_messages.msg h/ext_messages.h : src/el/libext/ext_messages.mc
+#	-mkdir h
+#	perl mc2msg.pl -h h $<
+#	cp h/ext_messages.msg .
 
-el/ext.h.gch: el/ext.h
-	$(CXXCOMPILE) $(CXXFLAGS) -x c++-header $<
+#lispmsg.msg lispmsg.h : src/lisp/lispeng/lispmsg.mc
+#	perl mc2msg.pl -h . $<
 
-ext_messages.msg ext_messages.h : el/libext/ext_messages.mc
-	perl mc2msg.pl -h . $<
+#lisp.cat : ext_messages.msg lispmsg.msg
+#	gencat --new -o $@ $^
 
-lispmsg.msg lispmsg.h : lispeng/lispmsg.mc
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
-	perl mc2msg.pl -h . $<
-
-lisp.cat : ext_messages.msg lispmsg.msg
-	gencat --new -o $@ $^
-
-<<<<<<< HEAD
 src/el/stl/codecvt : src/el/stl/codecvt
 	echo
 
@@ -76,26 +54,14 @@ src/el/stl/thread : src/el/stl/thread
 
 
 L = LISPINC=src/lisp/code/:clisp/ ./lisp --norc
-=======
-el/stl/% : el/stl/%
-	echo "---"
-
-
-L = LISPINC=src/code/:clisp/ ./lisp --norc
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 L0 = $(L) -M comp1.bls -c
 L2 = $(L) -M comp2.bls -c
 
 compiler.fas : clisp/compiler.lisp
 	$(L) -b -c $< -o $@
 
-<<<<<<< HEAD
 comp1.bls : src/lisp/code/init.lisp compiler.fas
 	$(L) -b --lp . -D LOAD_COMPILER_FAS -o $@ src/lisp/code/empty ./
-=======
-comp1.bls : src/code/init.lisp compiler.fas
-	$(L) -b --lp . -D LOAD_COMPILER_FAS -o $@ src/code/empty ./
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 
 
 init.bls : f1/ f2/ comp2.bls \
@@ -110,11 +76,7 @@ init.bls : f1/ f2/ comp2.bls \
  		f2/documentation.fas		f2/gray.fas					f2/fill-out.fas			f2/disassem.fas		\
  		f2/condition.fas			f2/loadform.fas				f2/pprint.fas			f2/runprog.fas		\
 		f2/describe.fas				f2/reploop.fas
-<<<<<<< HEAD
 	$(L) -b --lp . --lp f1/ --lp f2/ -i ./ src/lisp/code/empty
-=======
-	$(L) -b --lp . --lp f1/ --lp f2/ -i ./ src/code/empty
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 
 
 comp2.bls : comp1.bls \
@@ -129,21 +91,13 @@ comp2.bls : comp1.bls \
 	    f1/clos-slotdef1.fas	f1/clos-stablehash1.fas	f1/clos-specializer1.fas	f1/clos-class1.fas	\
     	f1/clos-class2.fas		f1/defstruct.fas	f1/format.fas f1/functions.fas	\
 	    f1/international.fas 	f1/cmacros.fas
-<<<<<<< HEAD
 	$(L) -b --lp . --lp f1/ -i ./ -o $@ src/lisp/code/empty
-=======
-	$(L) -b --lp . --lp f1/ -i ./ -o $@ src/code/empty
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 
 
 f1/ f2/ :
 	mkdir -p $@
 
-<<<<<<< HEAD
 f1/%.lib f1/%.fas : src/lisp/code/%.lisp
-=======
-f1/%.lib f1/%.fas : src/code/%.lisp
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
 	$(L0) $< -o $@
 
 f1/%.lib f1/%.fas : clisp/%.lisp
@@ -154,8 +108,4 @@ f2/%.lib f2/%.fas : clisp/%.lisp
 
 
 
-<<<<<<< HEAD
 CLEANFILES = src/el/ext.h.gch lisp.cat *.bls *.fas *.lib f1/*.fas f1/*.lib f2/*.fas f2/*.lib ext_messages.msg lispmsg.msg $(BUILT_SOURCES)
-=======
-CLEANFILES = el/ext.h.gch lisp.cat *.bls *.fas *.lib f1/*.fas f1/*.lib f2/*.fas f2/*.lib ext_messages.msg lispmsg.msg $(BUILT_SOURCES)
->>>>>>> 3fa76fab72b06a6db2243283d7b11e83f7b35aab
