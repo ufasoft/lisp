@@ -1215,7 +1215,7 @@ enum CTraits {
 
 struct CCharType {
 	CSyntaxType m_syntax;
-	WORD m_traits;
+	uint16_t m_traits;
 	bool m_bTerminating;
 
 	CSPtr m_macro,
