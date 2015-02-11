@@ -1173,19 +1173,11 @@ void CLispEng::F_MakeClosure() {
 		*q++ = car;
 	m_r = FromSValueT(c, TS_CCLOSURE);
 	c->CodeVec = Pop();
-#ifdef X_DEBUG//!!!D
-	CArrayValue *dbgAv = ToArray(c->CodeVec);
-	dbgAv = dbgAv;
-#endif
 	if (ToArray(c->CodeVec)->GetElementType() == ELTYPE_T) {
 		CArrayValue *oav = AsArray(c->CodeVec),
 			*nav = CreateVector(oav->DataLength, ELTYPE_BYTE);
 		for (size_t i=0; i<oav->DataLength; ++i) {
-			LONG_PTR v = AsNumber(oav->GetElement(i));
-#ifdef X_DEBUG//!!!D
-			if (v == 0x83)
-				v = v;
-#endif
+			intptr_t v = AsNumber(oav->GetElement(i));
 			((byte*)nav->m_pData)[i] = (byte)v;
 		}
 		c->CodeVec = FromSValue(nav);
