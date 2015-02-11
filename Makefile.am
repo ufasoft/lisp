@@ -8,35 +8,43 @@ include am.makeinc
 
 
 bin_PROGRAMS = lisp
-#lisp_DEPENDENCIES = lisp.cat
-
-#bindata_DATA= lisp.cat init.bls
-bindata_DATA=  init.bls
 bindatadir = $(bindir)
 
 dist_lisp_SOURCES = ext_messages.h
 nodist_lisp_SOURCES = lispmsg.h
 
 if BUILD_LIBEXT
+lisp_DEPENDENCIES = lisp.cat
+
+bindata_DATA= lisp.cat init.bls
+
+
 	lisp_SOURCES += $(libext_FILES)
+
+src/el/ext.h.gch: src/el/ext.h
+	$(CXXCOMPILE) $(CXXFLAGS) -x c++-header $<
+
+ext_messages.msg h/ext_messages.h : src/el/libext/ext_messages.mc
+	-mkdir h
+	perl mc2msg.pl -h h $<
+	cp h/ext_messages.msg .
+
+lispmsg.msg lispmsg.h : src/lisp/lispeng/lispmsg.mc
+	perl mc2msg.pl -h . $<
+
+lisp.cat : ext_messages.msg lispmsg.msg
+	gencat --new -o $@ $^
+
+
+else
+
+bindata_DATA=  init.bls
+
 endif
+
 
 BUILT_SOURCES =$(nodist_lisp_SOURCES) #src/el/ext.h.gch
 
-
-#src/el/ext.h.gch: src/el/ext.h
-#	$(CXXCOMPILE) $(CXXFLAGS) -x c++-header $<
-
-#ext_messages.msg h/ext_messages.h : src/el/libext/ext_messages.mc
-#	-mkdir h
-#	perl mc2msg.pl -h h $<
-#	cp h/ext_messages.msg .
-
-#lispmsg.msg lispmsg.h : src/lisp/lispeng/lispmsg.mc
-#	perl mc2msg.pl -h . $<
-
-#lisp.cat : ext_messages.msg lispmsg.msg
-#	gencat --new -o $@ $^
 
 src/el/stl/codecvt : src/el/stl/codecvt
 	echo
