@@ -43,6 +43,7 @@ AC_CHECK_LIB(gmp, __gmpz_init,, AC_MSG_ERROR("Library GMP not found"))
 AC_CHECK_LIB([readline], 	[history_list],	[have_readline=true]	, [			])
 if test x$have_readline = xtrue ; then
 	AC_DEFINE([HAVE_READLINE])
+	LIBS="$LIBS -lreadline"
 fi
 
 if -e src/el/ext.h ; then
@@ -60,7 +61,7 @@ AC_OUTPUT(Makefile)
 AU_PRINT_SETTINGS
 
 
-if test x$has_readline = xtrue; then
+if test x$have_readline = xtrue; then
 	echo "  readline................: yes"
 else
 	echo "  readline................: no"
