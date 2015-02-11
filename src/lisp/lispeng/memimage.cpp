@@ -43,11 +43,11 @@ CBlsHeader::CBlsHeader(bool bVerifyVersion)
 {
 	if (bVerifyVersion) {
 #if UCFG_USE_POSIX
-		UInt64 ar[4] = { VER_PRODUCTVERSION };
+		uint64_t ar[4] = { VER_PRODUCTVERSION };
 		m_ver = (ar[0]<<48)|(ar[1]<<32);
 #else
 		Version ver = FileVersionInfo().GetProductVersionN();		
-		m_ver = (UInt64(ver.Major)<<48)|(UInt64(ver.Minor)<<32);
+		m_ver = (uint64_t(ver.Major)<<48)|(uint64_t(ver.Minor)<<32);
 #endif
 	}
 	//!!!  m_verLastCompatible = m_ver
@@ -199,12 +199,12 @@ CP BlsReader::ReadVal(byte ts) const {
 		break;
 	case 1: 
 		if (ts == TS_FIXNUM)
-			r = (Int16)ReadBytes(2);
+			r = (int16_t)ReadBytes(2);
 		else
 			r = ReadBytes(2);
 		break;
 	case 2: 
-		r = (Int32)(ReadBytes(3) << 8) >> 8;
+		r = (int32_t)(ReadBytes(3) << 8) >> 8;
 		break;
 #endif
 	default: 
@@ -250,11 +250,11 @@ vector<String> CLispEng::ReadBinHeader(const BinaryReader& rd) {
 	if (header.m_sig != BINLISP_SIG)
 		Throw(E_EXT_InvalidFileHeader);
 #if UCFG_USE_POSIX
-		UInt64 arv[4] = { VER_PRODUCTVERSION };
-		UInt64 ver = (arv[0]<<48)|(arv[1]<<32);
+		uint64_t arv[4] = { VER_PRODUCTVERSION };
+		uint64_t ver = (arv[0]<<48)|(arv[1]<<32);
 #else
 		Version v = FileVersionInfo().GetProductVersionN();		
-		UInt64 ver = (UInt64(v.Major)<<48)|(UInt64(v.Minor)<<32);
+		uint64_t ver = (uint64_t(v.Major)<<48)|(uint64_t(v.Minor)<<32);
 #endif
 	if (m_bVerifyVersion && header.m_ver != ver)
 		Throw(E_EXT_IncompatibleFileVersion);
@@ -266,7 +266,7 @@ vector<String> CLispEng::ReadBinHeader(const BinaryReader& rd) {
 void CLispEng::LoadMem(Stream& bstm) {
 	BlsReader rd(bstm);
 
-	UInt32 nNonCons = 0;
+	uint32_t nNonCons = 0;
 	rd.ReadLens();
 #if UCFG_LISP_GC_USE_ONLY_BITMAP
 	size_t nFloat = rd.ReadSize();
@@ -361,7 +361,7 @@ void CLispEng::SaveMem(Stream& bstm) {
 	wr.WriteLens();
 
 #if UCFG_LISP_GC_USE_ONLY_BITMAP
-	UInt32 nFloat = 0;
+	uint32_t nFloat = 0;
 	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j)
 		if (BitOps::BitTest(m_consMan.m_pBitmap, j) && !BitOps::BitTest(m_pBitmapCons, j))
 			++nFloat;
@@ -370,7 +370,7 @@ void CLispEng::SaveMem(Stream& bstm) {
 
 
 #if UCFG_LISP_FFI
-	UInt32 nForeignPointer = 0;
+	uint32_t nForeignPointer = 0;
 	for (size_t j=RESERVED_CONS; j<m_consMan.m_size; ++j) {
 		if (BitOps::BitTest(m_pBitmapCons, j) && ((CSValueEx*)(m_consMan.Base+j))->m_type==TS_EX_FF_PTR)
 			++nForeignPointer;
