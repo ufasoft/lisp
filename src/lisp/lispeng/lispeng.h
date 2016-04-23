@@ -842,7 +842,7 @@ public:
 	FileStream m_stm;
 
 	void Open(RCString path, FileMode mode, FileAccess access = FileAccess::ReadWrite, FileShare share = FileShare::Read) {
-		m_stm.Open(path, mode, access, share);
+		m_stm.Open(path.ToOsString(), mode, access, share);
 		InputStream::Init(m_stm.m_fstm);
 		OutputStream::Init(m_stm.m_fstm);
 	}

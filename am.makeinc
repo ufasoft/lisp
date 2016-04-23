@@ -81,8 +81,8 @@ libext_FILES = 						\
 
 
 lisp_SOURCES =	\
-	file_config.h					\
-	prj_config.h					\
+	src/file_config.h					\
+	src/prj_config.h					\
 									\
 	src/lisp/lispeng/fundef.h				\
 	src/lisp/lispeng/gc.h					\
@@ -115,6 +115,8 @@ lisp_SOURCES =	\
 	src/lisp/lispeng/functions.cpp			\
 	src/lisp/lispeng/lisp.cpp				\
 	src/lisp/lispeng/listutil.cpp			\
+	src/lisp/lispeng/lisp-err.cpp				\
+	src/lisp/lispeng/lisp-err.h				\
 	src/lisp/lispeng/macros.cpp				\
 	src/lisp/lispeng/memimage.cpp			\
 	src/lisp/lispeng/pretty-printer.cpp		\
@@ -129,7 +131,7 @@ lisp_SOURCES =	\
 
 EXTRA_lisp_SOURCES =	\
 	am.makeinc					\
-	u-config.h						\
+	src/include/u-config.h						\
 									\
 	src/el/inc/ext.ver                  \
 									\
@@ -267,7 +269,7 @@ EXTRA_lisp_SOURCES =	\
 	src/el/libext/win32/ext2.cpp			\
 	src/el/libext/win32/getopt.cpp			\
 			                               	\
-	lisp-2013.sln						\
+	lisp.sln						\
 	src/lisp/lispeng/lispeng.vcxproj			\
 	src/lisp/lispeng/lispeng.vcxproj.filters 	\
 	src/lisp/lispeng/lisp386.cpp				\

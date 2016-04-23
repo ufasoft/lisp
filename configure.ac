@@ -1,4 +1,4 @@
-AC_INIT(ufasoft_lisp, 4.36, support@ufasoft.com,, http://ufasoft.com/lisp)
+AC_INIT(ufasoft_lisp, 4.37, support@ufasoft.com,, http://ufasoft.com/lisp)
 AC_CONFIG_MACRO_DIR([m4])
 m4_include([m4/common.m4])
 

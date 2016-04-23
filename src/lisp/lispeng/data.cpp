@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #if UCFG_WIN32
@@ -95,11 +100,10 @@ CP CLispEng::CreateSubr(uint32_t n) {
 }
 
 CP CLispEng::FindSubr(FPLispFunc pfn, byte nReq, byte nOpt, byte bRest) {
-	int i;
-	for (i=0; i<size(s_stFuncAddrs); i++)
+	for (size_t i=0; i<size(s_stFuncAddrs); i++)
 		if (s_stFuncAddrs[i] == pfn)
 			return CreateSubr(i, nReq, nOpt, bRest, 0);
-	for (i=0; i<size(s_stFuncRAddrs); i++)
+	for (size_t i=0; i<size(s_stFuncRAddrs); i++)
 		if ((FPLispFunc)s_stFuncRAddrs[i] == pfn)
 			return CreateSubr(i+SUBR_FUNCS, nReq, nOpt, bRest, 0);
 	E_Error();
@@ -193,20 +197,20 @@ void CLispEng::SetPathVars() {
 		SetSpecial(S(L_S_DEFAULT_PATHNAME_DEFAULTS), CreatePathname(AddDirSeparator(current_path())));
 
 		for (size_t i=0; i<LoadPaths.size(); ++i)
-			lc.Add(CreatePathname(AddDirSeparator(LoadPaths[i])));
+			lc.Add(CreatePathname(AddDirSeparator(LoadPaths[i].ToOsString())));
 #if !UCFG_WCE
 		String lispinc = Environment::GetEnvironmentVariable("LISPINC");
 		if (!!lispinc) 	{
 			vector<String> ar = lispinc.Split(String(Path::PathSeparator));
 			for (size_t i=0; i<ar.size(); i++)
-				lc.Add(CreatePathname(AddDirSeparator(ar[i])));
+				lc.Add(CreatePathname(AddDirSeparator(ar[i].ToOsString())));
 		}
 #endif
 		SetSpecial(GetSymbol("*LOAD-PATHS*", m_packCustom), lc);
 	}
 }
 
-pair<String, CP> CLispEng::GetStaticSymbolNamePack(int i) {
+pair<String, CP> CLispEng::GetStaticSymbolNamePack(size_t i) {
 	const char *p = nullptr;
 	CP pack = 0;
 	if (i < size(g_arSymbol)-1) {
@@ -287,7 +291,7 @@ void CLispEng::InitVars() {
 
 	CommonInit();
 
-	int i;
+	size_t i;
 	for (i=0; i<size(g_arSymbol)-1; i++) {
 		pair<String, CP> pp = GetStaticSymbolNamePack(i);
 		GetSymbol(pp.first, pp.second);

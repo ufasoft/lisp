@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -950,7 +955,7 @@ void CLispEng::ApplyHooked(CP fun, ssize_t nArg) {
 			F_InvokeHandlers();
 			abort();
 			break;
-		case SIGTERM: Throw(E_EXT_NormalExit); //!!!
+		case SIGTERM: Throw(ExtErr::NormalExit); //!!!
 		}
 		Push(fun);
 		//!!!    Push(args);
