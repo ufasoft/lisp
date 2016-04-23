@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -11,7 +16,7 @@ namespace Lisp {
 DateTime CLispEng::s_dtSince1900(1900, 1, 1);
 
 void CLispEng::F_GetInternalRealTime() {
-	m_r = TimeSpanToInternalTimeUnits(DateTime::UtcNow()-m_dtStart);
+	m_r = TimeSpanToInternalTimeUnits(Clock::now() - m_dtStart);
 }
 
 void CLispEng::F_GetInternalRunTime() {
@@ -94,7 +99,7 @@ CP CLispEng::ToUniversalTime(const DateTime& utc) {
 }
 
 void CLispEng::F_GetUniversalTime() {
-	m_r = ToUniversalTime(DateTime::UtcNow());
+	m_r = ToUniversalTime(Clock::now());
 }
 
 void CLispEng::F_DefaultTimeZone() {

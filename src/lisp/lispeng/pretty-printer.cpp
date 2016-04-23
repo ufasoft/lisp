@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -649,7 +654,7 @@ CExternalPrint::CExternalPrint() {
 		++count;
 	}
 	if (lisp.Spec(L_S_PRINT_READABLY)) {
-		for (int i=0; i<size(s_boundVals); ++i) {
+		for (size_t i=0; i<size(s_boundVals); ++i) {
 			const CSymBoundVal& sv = s_boundVals[i];
 			if (lisp.get_Special(sv.sym) != sv.val) {
 				Bind(lisp, IDX_TS(sv.sym, TS_SYMBOL), sv.val);

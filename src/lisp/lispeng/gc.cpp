@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #if !UCFG_WCE && UCFG_EXTENDED
@@ -302,7 +307,7 @@ void CLispGC::ApplyCheckArray(size_t idx) {
 void CLispGC::ApplyCheckReadtable(size_t idx) {
 	CReadtable *rt = m_readtableMan.TryApplyCheck(idx);
 	ApplyCheck(WITHOUT_FLAGS(rt->m_case));  //!!!
-	for (int i=0; i<size(rt->m_ar); i++) {
+	for (size_t i=0; i<size(rt->m_ar); i++) {
 		CCharType& ct = rt->m_ar[i];
 		ApplyCheck(ct.m_macro);
 		ApplyCheck(ct.m_disp);
@@ -567,7 +572,7 @@ void CLispEng::CollectDeferredAndMapConsImp() {
 void CLispEng::CollectEx() {
 	++m_nGC;
 
-	DateTime now = DateTime::UtcNow();
+	DateTime now = Clock::now();
 
 #ifdef X_DEBUG
 	CGcBeeper _gcBeeper;
@@ -641,7 +646,7 @@ void CLispEng::CollectEx() {
 		m_arValueMan[i]->AfterApplyCheck(false); //!!! may be need special check for arrays
 
 		//!!!  m_alloc       .AfterApplyCheck();
-	m_spanGC += DateTime::UtcNow()-now;
+	m_spanGC += Clock::now() - now;
 }
 
 void CLispEng::F_GC() {

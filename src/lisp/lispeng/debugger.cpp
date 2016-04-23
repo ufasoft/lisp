@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #if UCFG_WIN32
@@ -12,12 +17,12 @@ void CLispEng::F_DefaultBreakDriver() {
 #ifdef _DEBUG//!!!D
 	E_Error();
 #endif
-	Throw(E_LISP_UnhandledCondition);
+	Throw(LispErr::UnhandledCondition);
 }
 
 void CLispEng::StackOverflow() {
 	E_Error();//!!!
-	Push(CreateInteger(int(E_LISP_StackOverflow)-E_LISP_BASE+1));
+	Push(CreateInteger(int(LispErr::StackOverflow)));
 	F_GetErrMessage();
 	CArrayValue *av = ToArray(m_r);
 	CP symMacro = 0;
@@ -30,19 +35,12 @@ void CLispEng::StackOverflow() {
 	ThrowTo(GetSymbol("REPL", m_packSYS));
 }
 
-void CLispEng::ErrorCode(HRESULT hr, RCString s) {
-#ifdef WIN32
-	TCHAR buf[256];
-	const char *p = s;
-	if (!FormatMessage(FORMAT_MESSAGE_FROM_HMODULE|FORMAT_MESSAGE_ARGUMENT_ARRAY, LPCVOID(AfxGetInstanceHandle()), hr, 0,
-		buf, size(buf), (char**)&p))
-		Throw(E_FAIL);
+void CLispEng::ErrorCode(const error_code& ec, RCString s) {
 	CPutCharOstream os = m_streams[STM_ErrorOutput]; //!!!? may be dynamic_cast
-	os << String(buf);
+	os << ec;
+	if (!s.empty())
+		os << " " << s;
 	Call(GetSymbol("_BREAK-LOOP", m_packSYS));
-#else
-	Throw(E_FAIL);
-#endif
 }
 
 /*!!!R
@@ -92,17 +90,17 @@ void E_Error() {
 	}
 	//!!!  Throw(hr);
 
-	lisp.Error(E_LISP_UnknownError, 0);
+	lisp.Error(LispErr::UnknownError, 0);
 }
 
-void CLispEng::Error(HRESULT hr, CP p1) {
+void CLispEng::Error(const error_code& ec, CP p1) {
 	//!!!	PrintForm(cerr, p1);
 #ifdef _DEBUG//!!!D
 	E_Error();//!!!
 #endif
 	Call(GetSymbol("_AS-STRING", m_packSYS), p1);
-	ErrorCode(hr, AsString(m_r));
-	Throw(E_EXT_CodeNotReachable);
+	ErrorCode(ec, AsString(m_r));
+	Throw(ExtErr::CodeNotReachable);
 }
 
 /*!!!R
@@ -116,7 +114,7 @@ CP CLispEng::GetCond(CP sym) {
 #endif
 	CP ar = Spec(L_S_CONDS);
 	if (Type(ar) != TS_ARRAY) {
-		Exception exc(E_LISP_NoConditionSystem);
+		Exception exc(LispErr::NoConditionSystem);
 		exc.Data["Error"] = AsString(sym);
 		throw exc;
 	}
@@ -152,7 +150,7 @@ void CLispEng::E_SignalErr(CP typ, int errCode, int nArg) {
 	m_pStack[nArg-2] = CreateInteger(MAKE_HRESULT(SEVERITY_ERROR, FACILITY_LISP, errCode));
 	m_pStack[nArg-3] = CreateString(AfxLoadString(errCode)); 
 	Funcall(S(L_COERCE_TO_CONDITION_EX), nArg);
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::E_CellErr(CP name) {
@@ -181,7 +179,7 @@ void CLispEng::E_CellErr(CP name) {
 	Push(GetCond(S(L_CELL_ERROR)));
 	Push(S(L_K_NAME), name);
 	Apply(S(L_ERROR), 3, 0);
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::E_UndefinedFunction(CP name) {
@@ -212,7 +210,7 @@ void CLispEng::E_PackageErr(CP pack) {
 	Push(GetCond(S(L_PACKAGE_ERROR)));
 	Push(S(L_K_PACKAGE), pack);
 	Apply(S(L_ERROR), 3, 0);
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::E_PackageErr(CP pack, int errCode, CP a, CP b) {
@@ -246,7 +244,7 @@ void CLispEng::E_StreamErr(CP stm) {
 	Push(GetCond(S(L_STREAM_ERROR)));
 	Push(S(L_K_STREAM), stm);
 	Apply(S(L_ERROR), 3, 0);
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::E_StreamErr(int errCode, CP stm, CP arg) {	
@@ -260,7 +258,7 @@ void CLispEng::E_FileErr(CP path) {
 	Push(GetCond(S(L_FILE_ERROR)));
 	Push(S(L_K_PATHNAME), path);
 	Apply(S(L_ERROR), 3, 0);
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::E_FileErr(HRESULT hr, RCString message, CP pathname) {
@@ -271,7 +269,7 @@ void CLispEng::E_FileErr(HRESULT hr, RCString message, CP pathname) {
 	Push(S(L_K_PATHNAME));
 	Push(pathname);
 	Funcall(S(L_COERCE_TO_CONDITION_EX), 6);
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::E_ParseErr() {	
@@ -292,7 +290,7 @@ void CLispEng::E_EndOfFileErr(CP stm) {
 	Push(GetCond(S(L_END_OF_FILE)));
 	Push(S(L_K_STREAM), stm);
 	Apply(S(L_ERROR), 3, 0);
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::E_ReaderErr() {
