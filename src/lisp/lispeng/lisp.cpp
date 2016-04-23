@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include EXT_HEADER_FILESYSTEM
@@ -126,7 +131,7 @@ CLispEng::CLispEng()
 	m_streams[STM_StandardOutput] = new OutputStream(stdout);
 	m_streams[STM_ErrorOutput] = new OutputStream(stderr);
 
-	m_dtStart = DateTime::UtcNow();
+	m_dtStart = Clock::now();
 	m_spanStartUser = Thread::CurrentThread->TotalProcessorTime;
 
 //!!!  Init();
@@ -211,7 +216,7 @@ void CLispEng::Load(const path& fileName, bool bBuild) {
 		{
 //!!!R			CDynBindFrame bindDef(S(L_S_DEFAULT_PATHNAME_DEFAULTS), FromSValue(CreatePathname(m_initDir)), true);
 			if (SearchFile(p).empty())
-				Throw(E_LISP_NoInitFileFound);
+				Throw(LispErr::NoInitFileFound);
 			LoadFile(p);
 		}
 		String bin;
@@ -559,8 +564,8 @@ void CLispEng::Loop() {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
 	try {
 		Call(Spec(L_S_DRIVER));
-	} catch (RCExc ex) {
-		if (HResultInCatch(ex) != E_EXT_NormalExit) 
+	} catch (Exception& ex) {
+		if (ex.code() != ExtErr::NormalExit) 
 			throw;
 	}
 }
@@ -866,6 +871,5 @@ ILisp * __stdcall LispCreateObj() {
 static class CLispObj {
 public:
 	CLispObj() {
-		CMessageProcessor::RegisterModule((DWORD)Lisp::E_LISP_BASE, (DWORD)Lisp::E_LISP_UPPER, "lispeng");
 	}
 } g_lispObj;

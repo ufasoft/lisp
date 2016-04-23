@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -452,8 +457,8 @@ void CLispEng::F_CD() {
 		SV = CreateString("");
 	F_Pathname();
 	Call(S(L_NAMESTRING), m_r);
-	current_path(AsString(m_r));
-	Push(CreateString(current_path()));
+	current_path(AsString(m_r).ToOsString());
+	Push(CreateString(current_path().native()));
 	F_Pathname();
 	SetSpecial(S(L_S_DEFAULT_PATHNAME_DEFAULTS), m_r);
 }
@@ -585,7 +590,7 @@ path CPathname::ToString(bool bWithoutNameExt) {
 		}
 	}
 	String r = os.str();
-	return r;
+	return r.ToOsString();
 }
 
 

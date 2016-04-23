@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -446,7 +451,7 @@ void CLispEng::F_FillPointer() {
 	CP p = Pop();
 	CArrayValue *av = ToVector(p);
 	if (!(m_r=av->m_fillPointer))
-		Error(E_LISP_NoFillPointer, p);
+		Error(LispErr::NoFillPointer, p);
 }
 
 void CLispEng::F_SetFillPointer() {
@@ -454,7 +459,7 @@ void CLispEng::F_SetFillPointer() {
 	CP p = Pop();
 	CArrayValue *av = ToVector(p);
 	if (!av->m_fillPointer)
-		Error(E_LISP_NoFillPointer, p);
+		Error(LispErr::NoFillPointer, p);
 	av->m_fillPointer = m_r;
 }
 
@@ -781,7 +786,7 @@ void CLispEng::F_VectorPushExtend() {
 
 	CP pfp = av->m_fillPointer;
 	if (!pfp)
-		Error(E_LISP_NoFillPointer, SV);
+		Error(LispErr::NoFillPointer, SV);
 	size_t fp = AsPositive(pfp);
 	if (fp >= av->DataLength) {
 		Push(SV);

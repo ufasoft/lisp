@@ -1,3 +1,8 @@
+/*######   Copyright (c) 1999-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -30,7 +35,7 @@ void CLispEng::F_Directory() {
 void CLispEng::F_ProbeFile() {
 	path p = FromPathnameDesignator(Pop());
 	if (exists(p)) {
-		Push(CreateString(p));
+		Push(CreateString(p.native()));
 		F_Pathname();
 	}
 }
@@ -58,7 +63,7 @@ path CLispEng::GetDirectoryName(CP pathname) {
 	pn->m_type = 0;
 	pn->m_ver = 0;
 	Call(S(L_NAMESTRING), m_r);
-	return AsTrueString(m_r);
+	return AsTrueString(m_r).ToOsString();
 }
 
 void CLispEng::F_EnsureDirectoriesExist() {
@@ -70,7 +75,7 @@ void CLispEng::F_EnsureDirectoriesExist() {
 		m_arVal[1] = 0;
 	else {
 		if (bVerbose)
-			Call(S(L_FORMAT), V_T, CreateString("Creating directory: \n"+s));
+			Call(S(L_FORMAT), V_T, CreateString("Creating directory: \n" + s.native()));
 		error_code ec;
 		create_directories(s, ec);
 		if (ec)

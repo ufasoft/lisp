@@ -465,7 +465,6 @@
     <ClCompile Include="F_Stream.cpp" />
     <ClCompile Include="ffi.cpp" />
     <ClCompile Include="Functions.cpp" />
-    <ClCompile Include="GarbageColl.cpp" />
     <ClCompile Include="Lisp.cpp" />
     <ClCompile Include="LispEng.cpp" />
     <ClCompile Include="ListUtil.cpp" />

@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #if UCFG_WIN32
@@ -214,7 +219,7 @@ CP BlsReader::ReadVal(byte ts) const {
 }
 
 const BlsReader& operator>>(const BlsReader& rd, CSPtr& p) {
-	byte ts = rd.ReadBytes(1);
+	byte ts = (byte)rd.ReadBytes(1);
 	switch (ts & 0x1F) {
 	case TS_NIL:
 		p = 0;
@@ -248,7 +253,7 @@ vector<String> CLispEng::ReadBinHeader(const BinaryReader& rd) {
 	CBlsHeader header(m_bVerifyVersion);
 	rd.ReadStruct(header);
 	if (header.m_sig != BINLISP_SIG)
-		Throw(E_EXT_InvalidFileHeader);
+		Throw(ExtErr::InvalidFileHeader);
 #if UCFG_USE_POSIX
 		uint64_t arv[4] = { VER_PRODUCTVERSION };
 		uint64_t ver = (arv[0]<<48)|(arv[1]<<32);
@@ -257,7 +262,7 @@ vector<String> CLispEng::ReadBinHeader(const BinaryReader& rd) {
 		uint64_t ver = (uint64_t(v.Major)<<48)|(uint64_t(v.Minor)<<32);
 #endif
 	if (m_bVerifyVersion && header.m_ver != ver)
-		Throw(E_EXT_IncompatibleFileVersion);
+		Throw(ExtErr::IncompatibleFileVersion);
 	CStringVector ar;
 	rd >> ar;
 	return ar;

@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -123,7 +128,7 @@ return FromValue(((CP*)pv-m_alloc.m_base), ts);
 CIntFuncValue *CLispEng::ToIntFunc(CP p) {
 	if (Type(p) == TS_INTFUNC)
 		return AsIntFunc(p);
-	Error(E_LISP_BadArgumentType, p);
+	Error(LispErr::BadArgumentType, p);
 }
 
 CArrayValue*  __fastcall CLispEng::ToArray(CP p) {
@@ -249,13 +254,13 @@ CArrayValue *ToObject(CP p) {
 CClosure *ToCClosure(CP p) {
 	if (Type(p) == TS_CCLOSURE)
 		return &Lisp().TheClosure(p);
-	Lisp().Error(E_LISP_BadArgumentType, p);
+	Lisp().Error(LispErr::BadArgumentType, p);
 }
 
 CMacro *ToMacro(CP p) {
 	if (Type(p) == TS_MACRO)
 		return Lisp().AsMacro(p);
-	Lisp().Error(E_LISP_BadArgumentType, p);
+	Lisp().Error(LispErr::BadArgumentType, p);
 }
 
 double AsFloatVal(CP p) {
@@ -267,13 +272,13 @@ double AsFloatVal(CP p) {
 CFrameType AsFrameType(CP p) {
 	if (Type(p) == TS_FRAMEINFO)
 		return CFrameType(AsIndex(p) & FRAME_TYPE_MASK);
-	Lisp().Error(E_LISP_BadArgumentType, p);
+	Lisp().Error(LispErr::BadArgumentType, p);
 }
 
 uintptr_t AsFrameTop(CP p) {
 	if (Type(p) == TS_FRAMEINFO)
 		return AsIndex(p) >> 8;
-	Lisp().Error(E_LISP_BadArgumentType, p);
+	Lisp().Error(LispErr::BadArgumentType, p);
 }
 
 CP CLispEng::Cons(CP a, CP b) {
@@ -702,7 +707,7 @@ const BlsReader& operator>>(const BlsReader& rd, CCharType& ct) {
 
 void CReadtable::Write(BlsWriter& wr) {
 	wr << m_case;
-	for (int i=0; i<size(m_ar); i++)
+	for (size_t i=0; i<size(m_ar); i++)
 		wr << m_ar[i];
 	wr.WriteSize(m_map.size());
 	for (CCharMap::iterator it=m_map.begin(); it!=m_map.end(); ++it) {
@@ -713,7 +718,7 @@ void CReadtable::Write(BlsWriter& wr) {
 
 void CReadtable::Read(const BlsReader& rd) {
 	rd >> m_case;
-	for (int i=0; i<size(m_ar); i++)
+	for (size_t i=0; i<size(m_ar); i++)
 		rd >> m_ar[i];
 	size_t num = rd.ReadSize();
 	while (num--) {

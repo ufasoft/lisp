@@ -215,7 +215,7 @@ void CLispEng::F_UserHomedirPathname() {
 #	endif
 		}
 #endif
-		m_r = CreatePathname(AddDirSeparator(path));
+		m_r = CreatePathname(AddDirSeparator(path.ToOsString()));
 	}
 }
 

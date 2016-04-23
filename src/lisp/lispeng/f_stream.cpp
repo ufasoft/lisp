@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -919,8 +924,8 @@ void CLispEng::ReadCharHelper(CP stm1, bool bEofErr, CP eofVal, bool bRec, bool 
 								int ch;
 								try {
 									ch = ts->get();
-								} catch (RCExc ex) {
-									if (HResultInCatch(ex) == E_EXT_NormalExit)
+								} catch (Exception& ex) {
+									if (ex.code() == ExtErr::NormalExit)
 										throw;
 									E_Error();
 								}
@@ -1321,7 +1326,7 @@ int StandardStream::get() {
 			}
 			buf[i++] = (byte)ib;
 			try {
-				DBG_LOCAL_IGNORE(E_EXT_InvalidUTF8String);
+				DBG_LOCAL_IGNORE_CONDITION(ExtErr::InvalidUTF8String);
 
 				String::value_type ch;
 				int n = Encoding->GetChars(ConstBuf(buf, i), &ch, 1);
@@ -1329,8 +1334,8 @@ int StandardStream::get() {
 					return ch;
 				if (n != 0)
 					Throw(E_FAIL);
-			} catch (RCExc ex) {
-				if (HResultInCatch(ex) != E_EXT_InvalidUTF8String)
+			} catch (Exception& ex) {
+				if (ex.code() != ExtErr::InvalidUTF8String)
 					throw;
 			}
 		}

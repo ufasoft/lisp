@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 #include "lispeng.h"
@@ -1127,7 +1132,7 @@ void CLispEng::F_Exit() {
 	ShowInfo();
 	if (m_pSink)
 		m_pSink->OnExit();
-	Throw(E_EXT_NormalExit); //!!!
+	Throw(ExtErr::NormalExit); //!!!
 }
 
 void CLispEng::F_SaveMem() {
