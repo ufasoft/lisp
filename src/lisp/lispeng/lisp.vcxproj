@@ -494,7 +494,12 @@
     <ClCompile Include="..\..\el\libext\ext-encoding.cpp" />
     <ClCompile Include="..\..\el\libext\ext-file.cpp" />
     <ClCompile Include="..\..\el\libext\ext-fw.cpp" />
-    <ClCompile Include="..\..\el\libext\ext-handlers.cpp" />
+    <ClCompile Include="..\..\el\libext\ext-handlers.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Console-Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Console-Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\..\EL\libext\ext-os-api.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Console-Release|Win32'">true</ExcludedFromBuild>
