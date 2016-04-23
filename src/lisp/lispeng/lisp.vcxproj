@@ -21,38 +21,35 @@
   <PropertyGroup Label="Globals">
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
   </PropertyGroup>
+  <Import Project="..\..\cfg\vs\vs-ver.props" />
   <PropertyGroup Label="Globals">
     <ProjectName>lispeng</ProjectName>
     <ProjectGuid>{B47A6B46-8B80-483C-B2DE-C9F81DDEEF27}</ProjectGuid>
     <RootNamespace>LispEng</RootNamespace>
     <Keyword>MFCProj</Keyword>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Console-Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <UseOfMfc>Static</UseOfMfc>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Console-Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <UseOfMfc>Static</UseOfMfc>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <UseOfMfc>Static</UseOfMfc>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
     <UseOfMfc>Static</UseOfMfc>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="..\..\cfg\vs\vs-inc.props" />
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
     <Import Project="..\..\cfg\vs\mc.props" />
@@ -498,7 +495,12 @@
     <ClCompile Include="..\..\el\libext\ext-file.cpp" />
     <ClCompile Include="..\..\el\libext\ext-fw.cpp" />
     <ClCompile Include="..\..\el\libext\ext-handlers.cpp" />
-    <ClCompile Include="..\..\EL\libext\ext-os-api.cpp" />
+    <ClCompile Include="..\..\EL\libext\ext-os-api.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Console-Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Console-Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\el\libext\ext-os.cpp" />
     <ClCompile Include="..\..\el\libext\ext-posix.cpp" />
     <ClCompile Include="..\..\el\libext\win32\ext-registry.cpp" />
@@ -536,7 +538,6 @@
     <ClInclude Include="prj_config.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="symdef.h" />
-    <ClInclude Include="..\..\EL\libext\bignum386.h" />
     <ClInclude Include="..\..\el\libext\ExCom.h" />
     <ClInclude Include="..\..\EL\libext\ext-cpp.h" />
     <ClInclude Include="..\..\el\libext\ext-hash.h" />
@@ -544,7 +545,7 @@
     <ClInclude Include="typedef.h" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="..\..\EL\libext\bignum-x86x64.asm">
+    <MASM Include="..\..\el\bignum\x86x64\bignum-x86x64.asm">
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Console-Debug|Win32'">../..</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Console-Release|Win32'">../..</IncludePaths>
       <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../..</IncludePaths>

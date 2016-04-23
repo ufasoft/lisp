@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #pragma once
 
 #ifdef _WIN32
@@ -58,7 +63,7 @@ typedef enum  CorPinvokeMap {
 //!!!#include <BitStream.h>
 
 #include "gc.h"
-
+#include "lisp-err.h"
 
 //!!! #pragma warning(disable : 4651 4652 4200)
 
@@ -79,11 +84,6 @@ namespace Lisp {
 #endif
 
 
-
-const int E_LISP_BASE = E_LISP_InvalidSyntax,
-	E_LISP_UPPER = E_LISP_BASE+300;
-
-const DWORD E_LISP_Base = E_LISP_InvalidSyntax-1;
 
 const size_t RESERVED_CONS = 6; //!!!
 
@@ -2299,11 +2299,11 @@ public:
 	void SetSignal(bool bSignal);
 	void Load(Stream& stm);
 	void LoadImage(RCString filename);
-	int Run();
+	int Run() override;
 	void Compile(RCString name);
 	void LoadFile(const path& p) override;
 	bool IsProperList(CP p);
-	void SaveImage(Stream& stm);
+	void SaveImage(Stream& stm) override;
 	String Eval(RCString sForm);
 	CP VGetSymbol(RCString name, RCString pack);
 	void ParseArgs(char **argv);
@@ -2534,11 +2534,11 @@ public:
 		return AsArray(CurClosure)->GetElement(idx);
 	}
 
-	DECLSPEC_NORETURN void Error(HRESULT hr, CP p1);
+	DECLSPEC_NORETURN void Error(const error_code& ec, CP p1);
 	//!!!D  DECLSPEC_NORETURN void E_TypeError(HRESULT hr, CP p);
 
 	void StackOverflow();
-	void ErrorCode(HRESULT hr, RCString s);
+	void ErrorCode(const error_code& ec, RCString s);
 
 	void Verify(CObMap& obMap);
 
@@ -2998,9 +2998,9 @@ public:
 	//!!!D  void Load();
 	//!!!D  void Load(CP sym);
 	void LoadFromStream(CP stm);
-	void Loop();
+	void Loop() override;
 	size_t SizeOf(CP p, int level = 20); //!!!
-	void ShowInfo();
+	void ShowInfo() override;
 	void CallBindedFormsEx(FPBindVar pfn, CP forms, CP *pBind, int nBinds);
 	void CallBindedForms(FPBindVar pfn, CP caller, CP varSpecs, CP declars, CP forms);
 	CP AugmentDeclEnv(CP declSpec, CP env);
@@ -3602,7 +3602,7 @@ public:
 	bool RtCaseDifferent(CP rtCase, CP pch);
 	void PrintInt(CP n, int base);
 
-	pair<String, CP> GetStaticSymbolNamePack(int i);
+	pair<String, CP> GetStaticSymbolNamePack(size_t i);
 
 };  // CLispEng
 

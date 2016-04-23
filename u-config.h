@@ -1,2 +1,0 @@
-#define UCFG_STDSTL 1
-#define UCFG_EXTENDED 0
