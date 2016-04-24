@@ -13,11 +13,15 @@ For Linux/Unix:
 	./configure && make
 
 For Windows:
-	Open lisp-2012.sln  (VS 2012 solution file)
+	Open lisp.sln  (with VS 2015/2013)
 
 For Windows CE:
 	Open src/lispeng/lisp.vcproj  (VS 2008 project file)
 
 
 
+========================
+This software is free.
+Bitcoin address for donations: 1CyCvgJsYBN6YMcHsnsHR9SoQk8T9fKMvj
+Donating will help to improve this project.
 
