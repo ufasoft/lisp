@@ -197,7 +197,7 @@ void CLispEng::SetPathVars() {
 		SetSpecial(S(L_S_DEFAULT_PATHNAME_DEFAULTS), CreatePathname(AddDirSeparator(current_path())));
 
 		for (size_t i=0; i<LoadPaths.size(); ++i)
-			lc.Add(CreatePathname(AddDirSeparator(LoadPaths[i].ToOsString())));
+			lc.Add(CreatePathname(AddDirSeparator(LoadPaths[i])));
 #if !UCFG_WCE
 		String lispinc = Environment::GetEnvironmentVariable("LISPINC");
 		if (!!lispinc) 	{

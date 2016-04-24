@@ -150,7 +150,7 @@ CLispEng::~CLispEng() {
 }
 
 void CLispEng::Load(const path& fileName, bool bBuild) {
-	String ext = fileName.extension().native().ToLower();
+	String ext = String(fileName.extension().native()).ToLower();
 	path p = fileName;
 
 #if UCFG_USE_POSIX
@@ -190,7 +190,7 @@ void CLispEng::Load(const path& fileName, bool bBuild) {
 	vector<String> arModule;
 	CBoolKeeper keeper(m_bInit);
 
-	if (p.extension().native().ToLower() == ".bls") {
+	if (String(p.extension().native()).ToLower() == ".bls") {
 		LoadImage(p);
 
 		for (int i=STM_StandardInput; i<=STM_TerminalIO; i++)
@@ -219,7 +219,7 @@ void CLispEng::Load(const path& fileName, bool bBuild) {
 				Throw(LispErr::NoInitFileFound);
 			LoadFile(p);
 		}
-		String bin;
+		path bin;
 		if (!m_outfile.empty()) {
 			if (!m_arg.empty())
 				return;
@@ -270,7 +270,7 @@ void CLispEng::ParseArgs(char **argv) {
 		m_arCommandLineArg.push_back(*argv);
 }
 
-void CLispEng::LoadImage(RCString filename) {
+void CLispEng::LoadImage(const path& filename) {
 	TRC(0, "Loading image " << filename);
 
 	Ext::FileStream fs(filename, FileMode::Open, FileAccess::Read);
@@ -347,7 +347,7 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 	#endif
 		AFX_MANAGE_STATE(AfxGetStaticModuleState());
 		vector<pair<String, String> > arForCompile;
-		vector<String> preloads;
+		vector<path> preloads;
 		vector<String> exprs;
 		
 		while (true) {
@@ -490,11 +490,11 @@ void CLispEng::ProcessCommandLineImp(int argc, char *argv[]) {
 #else
 				path mypath = AfxGetModuleState()->FileName;
 #endif
-				Push(CreateString(mypath.parent_path() / "constub.bin"));
-				Push(CreateString(m_destFile));
+				Push(CreateString((mypath.parent_path() / "constub.bin").native()));
+				Push(CreateString(m_destFile.native()));
 				Funcall(GetSymbol("MAKE-EXE", m_packEXT), 3);
 			} else {
-				LoadFile(m_arg);
+				LoadFile(m_arg.ToOsString());
 				if (!m_outfile.empty()) {
 					Ext::FileStream fs(m_outfile, FileMode::Create, FileAccess::Write);
 					SaveMem(fs);
@@ -640,10 +640,7 @@ void CLispEng::LoadFile(const path& p) {
 	TRC(3, p);
 
 	AFX_MANAGE_STATE(AfxGetStaticModuleState())
-	if (CP fun = ToSymbol(S(L_LOAD))->GetFun())
-		Call(S(L_LOAD), CreateString(p));
-	else
-		Call(GetSymbol("_LOAD", m_packSYS), CreateString(p));
+    Call(ToSymbol(S(L_LOAD))->GetFun() ? S(L_LOAD) : GetSymbol("_LOAD", m_packSYS), CreateString(p.native()));
 }
 
 class CIntIncrementor {

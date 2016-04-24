@@ -25,6 +25,9 @@
     <Filter Include="Console">
       <UniqueIdentifier>{4c62a7c8-1c0d-4cdd-871a-7e6fa6682d98}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libext">
+      <UniqueIdentifier>{7fb776cc-2c95-4cb0-b492-31a0bd11f3c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="LispEng.def">
@@ -168,9 +171,6 @@
     <ClCompile Include="..\..\el\libext\ext-ip-address.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-net.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\el\libext\stack-trace.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -195,46 +195,10 @@
     <ClCompile Include="..\..\el\libext\ext-app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-base.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-blob.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\win32\ext-com.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-core.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-encoding.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-fw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-handlers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\EL\libext\ext-os-api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\el\libext\ext-os.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-posix.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\win32\ext-registry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-stream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\el\libext\ext-string.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\el\libext\win32\ext-win.cpp">
@@ -251,6 +215,51 @@
     </ClCompile>
     <ClCompile Include="..\..\EL\libext\bignum386.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-base.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-blob.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\ext-com.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-core.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-encoding.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-file.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-fw.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-err.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\dl.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-string.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-stream.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\win32\ext-registry.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-posix.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-net.cpp">
+      <Filter>Source Files\libext</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\el\libext\ext-handlers.cpp">
+      <Filter>Source Files\libext</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

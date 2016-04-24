@@ -841,8 +841,8 @@ public:
 	//!!! fstream m_fs;
 	FileStream m_stm;
 
-	void Open(RCString path, FileMode mode, FileAccess access = FileAccess::ReadWrite, FileShare share = FileShare::Read) {
-		m_stm.Open(path.ToOsString(), mode, access, share);
+	void Open(const path& path, FileMode mode, FileAccess access = FileAccess::ReadWrite, FileShare share = FileShare::Read) {
+		m_stm.Open(path, mode, access, share);
 		InputStream::Init(m_stm.m_fstm);
 		OutputStream::Init(m_stm.m_fstm);
 	}
@@ -1837,7 +1837,7 @@ class CLispEng : //!!! public CLisp,
 private:
 	CBool m_bVarsInited;
 	set<String> Features;
-	vector<String> LoadPaths;
+	vector<path> LoadPaths;
 
 	DateTime m_dtStart;
 	CInt<uint32_t> m_nGC;	
@@ -1857,7 +1857,7 @@ public:
 	vector<path> m_arModule;
 
 	int m_level;
-	String m_initDir;
+	path m_initDir;
 	String m_arg;
 	vector<String> m_arCommandLineArg;
 	path m_outfile,
@@ -2298,7 +2298,7 @@ public:
 	void Init(bool bBuild);
 	void SetSignal(bool bSignal);
 	void Load(Stream& stm);
-	void LoadImage(RCString filename);
+	void LoadImage(const path& filename);
 	int Run() override;
 	void Compile(RCString name);
 	void LoadFile(const path& p) override;

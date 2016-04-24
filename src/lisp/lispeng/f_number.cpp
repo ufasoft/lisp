@@ -1,3 +1,8 @@
+/*######   Copyright (c) 2002-2015 Ufasoft  http://ufasoft.com  mailto:support@ufasoft.com,  Sergey Pavlov  mailto:dev@ufasoft.com ####
+#                                                                                                                                     #
+# 		See LICENSE for licensing information                                                                                         #
+#####################################################################################################################################*/
+
 #include <el/ext.h>
 
 using namespace rel_ops;
@@ -181,7 +186,7 @@ double CLispEng::ToFloatValue(CP x) {
 		BigInteger r = n/d;
 		return ::ldexp(r.AsDouble() , exp);
 	}
-	Throw(E_EXT_CodeNotReachable);
+	Throw(ExtErr::CodeNotReachable);
 }
 
 void CLispEng::F_Float() {

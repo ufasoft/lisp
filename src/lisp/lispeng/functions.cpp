@@ -404,11 +404,11 @@ void CLispEng::F_GenSym() {
 #	endif
 		sv = CreateSymbol(buf);
 #endif
-	}	
+	}
 	m_r = FromSValue(sv);
 }
 
-void CLispEng::F_SymbolName() {  
+void CLispEng::F_SymbolName() {
 	CP p = Pop();
 	CSymbolValue *sv = ToSymbol(p);
 #if UCFG_LISP_SPLIT_SYM
@@ -520,7 +520,7 @@ String CLispEng::AsTrueString(CP p) {
 }
 
 String AsString(CP p) {
-	return Type(p)==TS_SYMBOL ? 
+	return Type(p)==TS_SYMBOL ?
 #if UCFG_LISP_SPLIT_SYM
 		Lisp().SymNameByIdx(AsIndex(p))
 #else
@@ -645,7 +645,7 @@ void CLispEng::F_ConstantP() {
 	switch (Type(p)) {
 	case TS_SYMBOL:
 		m_r = FromBool(!(~ToSymbol(p)->m_fun & (SYMBOL_FLAG_SPECIAL|SYMBOL_FLAG_CONSTANT)));
-		break;  
+		break;
 	case TS_CONS:
 		if (p && Car(p)!=S(L_QUOTE))
 			break;
@@ -715,7 +715,7 @@ CSPtr CLispEng::ReadClosure(CP stm, int n) {
 	CSPtr p = Pop();
 	Push(FromSValue(pClosure));
 	SplitPair(p, pClosure->m_name);
-	SplitPair(p, car);		
+	SplitPair(p, car);
 	CArrayValue *bv = ToArray(car);
 	pClosure->m_code = new byte[pClosure->m_codeSize=AsNumber(Car(bv->m_dims))/8];
 	int i;
@@ -771,7 +771,7 @@ void CLispEng::F_RevListToString() {
 	CArrayValue *av = CreateVector(size, ELTYPE_BASECHAR);
 	for (CP p=Pop(), car; size--;) {
 		SplitPair(p, car);
-		*((char*)av->m_pData+size) = (char)AsChar(car); //!!! 
+		*((char*)av->m_pData+size) = (char)AsChar(car); //!!!
 	}
 	m_r = FromSValue(av);
 }*/
@@ -782,7 +782,7 @@ void CLispEng::F_ChainsEx() {
 		*pStr = m_pStack+2,
 		end = GetStack(1),
 		x = GetStack(2),
-		car;  
+		car;
 	int n = 0;
 	for (; x!=end; n++) {
 		SplitPair(x, car);
@@ -815,11 +815,15 @@ void CLispEng::F_ChainsEx() {
 */
 
 path CLispEng::FindInLISPINC(const path& filename, const path& defaultDir) {
-	vector<String> ar;
+	vector<path> ar;
 #if !UCFG_WCE
 	String lispinc = Environment::GetEnvironmentVariable("LISPINC");
-	if (!!lispinc)
-		ar = lispinc.Split(String(Path::PathSeparator));
+	if (!!lispinc) {
+		vector<String> ars = lispinc.Split(String(Path::PathSeparator));
+		EXT_FOR(const String& s, ars) {
+			ar.push_back(s.ToOsString());
+		}
+	}
 #endif
 	if (m_bVarsInited) {
 		for (CP lp=AsSymbol(GetSymbol("*LOAD-PATHS*", m_packCustom))->m_dynValue, car; SplitPair(lp, car);)
@@ -867,7 +871,7 @@ void CLispEng::F_FindInLispenv() {
 }
 
 void CLispEng::F_Load() {
-	String name = AsString(Pop());
+	path name = AsString(Pop()).ToOsString();
 	path p = SearchFile(name);
 
 	TRC(1, "Found file: " << p)
@@ -1059,7 +1063,7 @@ void CLispEng::F_Pr(size_t nArgs) {
 	}
 	cerr << endl;
 	SkipStack(nArgs);
-#ifdef X_DEBUG //!!!D	
+#ifdef X_DEBUG //!!!D
 	static int s_i = 0;
 	++s_i;
 	cerr << " " << s_i << " " << endl;
@@ -1118,7 +1122,7 @@ void CLispEng::F_Exit() {
 #ifdef X_DEBUG//!!!D
 	E_Error();
 #endif
-	CP r = ToOptional(Pop(), V_0);	
+	CP r = ToOptional(Pop(), V_0);
 	if (IntegerP(r)) {
 		BigInteger bi = ToBigInteger(r);
 		int64_t n;
@@ -1160,8 +1164,8 @@ void CLispEng::F_RenameFile() {
 	SV1 = m_r;
 
 	Call(S(L_MERGE_PATHNAMES), SV, SV1);
-	path defNewName = AsString(m_r),
-		from = AsString(SV1);
+	path defNewName = AsString(m_r).ToOsString(),
+		from = AsString(SV1).ToOsString();
 	error_code ec;
 	sys::rename(from, defNewName, ec);
 	if (ec)
@@ -1169,7 +1173,7 @@ void CLispEng::F_RenameFile() {
 
 	Push(m_r);		// defNewName
 
-	Push(CreateString(from));
+	Push(CreateString(from.native()));
 	F_Pathname();
 	SV2 = m_r;
 
@@ -1177,7 +1181,7 @@ void CLispEng::F_RenameFile() {
 	F_Pathname();
 	m_arVal[2] = m_r;
 	m_arVal[1] = SV2;
-	m_r = Pop();	
+	m_r = Pop();
 	m_cVal = 3;
 	SkipStack(2);
 }

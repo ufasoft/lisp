@@ -155,6 +155,7 @@
       <DataExecutionPrevention />
       <ImportLibrary>$(OutDir)lib/lispeng.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Command>tlbimp /out:$(OutDir)inc/Interop.LispEng.dll $(OutDir)inc/LispEng.tlb</Command>
@@ -221,6 +222,7 @@
       <DataExecutionPrevention />
       <ImportLibrary>$(OutDir)lib/lispeng.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Command>tlbimp /out:$(OutDir)inc/Interop.LispEng.dll $(OutDir)inc/LispEng.tlb</Command>
@@ -287,6 +289,7 @@
       <DataExecutionPrevention />
       <ImportLibrary />
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Command />
@@ -353,6 +356,7 @@
       <DataExecutionPrevention />
       <ImportLibrary />
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Command />
@@ -423,6 +427,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\el\libext\binary-reader-writer.cpp" />
+    <ClCompile Include="..\..\el\libext\dl.cpp" />
+    <ClCompile Include="..\..\el\libext\ext-err.cpp" />
     <ClCompile Include="..\..\el\libext\ext-ip-address.cpp" />
     <ClCompile Include="..\..\el\libext\ext-net.cpp" />
     <ClCompile Include="..\..\el\libext\stack-trace.cpp" />

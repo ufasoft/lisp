@@ -473,7 +473,7 @@ void CLispEng::F_BuiltInStreamElementType() {
 void CLispEng::F_InteractiveStreamP() {
 	struct CStreamHandler : public IStreamHandler {
 		CP OnConcatenated(CP p) {
-			CLispEng& lisp = LISP_GET_LISPREF;			
+			CLispEng& lisp = LISP_GET_LISPREF;
 			CP in = lisp.AsStream(p)->m_in;
 			return in ? lisp.Car(in) : p;
 		}
@@ -615,12 +615,12 @@ void CLispEng::F_Open() {
 	path name;
 	if (AsSymbol(S(L_NAMESTRING))->GetFun()) {
 		Call(S(L_NAMESTRING), pathname);
-		name = AsString(m_r);
+		name = AsString(m_r).ToOsString();
 	} else
 		name = ToPathname(pathname)->ToString();
-	
+
 	CPathname *pn = ToPathname(pathname);
-		
+
 	TRC(2, name);
 
 	if (m_bInit)
@@ -653,7 +653,7 @@ void CLispEng::F_Open() {
 
 	if (StringP(externalFormat))
 		fs->Encoding.reset(Encoding::GetEncoding(AsString(externalFormat)));
-	
+
 	FileAccess access = FileAccess::Read;
 	switch (direction) {
 	case S(L_K_INPUT):
@@ -676,7 +676,7 @@ void CLispEng::F_Open() {
 	case S(L_K_NEW_VERSION):
 	case S(L_K_RENAME):
 	case S(L_K_RENAME_AND_DELETE):
-	case S(L_K_OVERWRITE):	
+	case S(L_K_OVERWRITE):
 	case S(L_K_APPEND):
 	case S(L_K_SUPERSEDE):
 	case 0:
@@ -701,11 +701,11 @@ void CLispEng::F_Open() {
 	if (int(access) & int(FileAccess::Write)) {
 		switch (ifExists) {
 		case S(L_K_APPEND):			mode = FileMode::Append; break;
-		case S(L_K_OVERWRITE):	
+		case S(L_K_OVERWRITE):
 			if (ifNotExists == S(L_K_ERROR))
 				mode = FileMode::Open;
 			else
-				mode = FileMode::OpenOrCreate;			
+				mode = FileMode::OpenOrCreate;
 			break;
 
 		case S(L_K_SUPERSEDE):
@@ -716,14 +716,14 @@ void CLispEng::F_Open() {
 		case S(L_K_RENAME_AND_DELETE):
 			{
 				error_code ec;
-				sys::rename(name, Path::GetTempFileName(name.parent_path(), name.filename()).first, ec);
+				sys::rename(name, Path::GetTempFileName(name.parent_path(), name.filename().native()).first, ec);
 			}
 		case S(L_K_ERROR):
 		case 0:
 			mode = FileMode::CreateNew;
 			break;
-		}	
-	}	
+		}
+	}
 
 
 	//!!!    if (ExtractFilePath(name) == "")
@@ -747,7 +747,7 @@ void CLispEng::F_Open() {
 		CStreamValue *stm = CreateStream();
 		m_r = FromSValue(stm);
 		stm->m_subtype = STS_FILE_STREAM;
-		stm->m_mode = mode;				
+		stm->m_mode = mode;
 		stm->TrueName = Path::GetTruePath(name);
 
 		if (elementType==S(L_SIGNED_BYTE) || elementType==S(L_UNSIGNED_BYTE))
@@ -762,7 +762,7 @@ void CLispEng::F_Open() {
 
 		stm->m_stream = pfs;
 		stm->m_pathname = originalPathname;
-		stm->m_flags = (int(access) & int(FileAccess::Read) ? STREAM_FLAG_INPUT : 0) | (int(access) & int(FileAccess::Write) ? STREAM_FLAG_OUTPUT : 0);		
+		stm->m_flags = (int(access) & int(FileAccess::Read) ? STREAM_FLAG_INPUT : 0) | (int(access) & int(FileAccess::Write) ? STREAM_FLAG_OUTPUT : 0);
 	}
 	SkipStack(1);
 }
@@ -787,7 +787,7 @@ void CLispEng::F_Close() {						// sys::built-in-stream-close
 		if (abort && (stm->m_mode==FileMode::Create || stm->m_mode==FileMode::CreateNew)) {
 			error_code ec;
 			sys::remove(stm->TrueName);
-			m_r = V_T;		
+			m_r = V_T;
 		}
 	}
 	SkipStack(1);
@@ -935,7 +935,7 @@ void CLispEng::ReadCharHelper(CP stm1, bool bEofErr, CP eofVal, bool bRec, bool 
 								lisp.m_r = 0;
 						}
 					}
-					if (Type(lisp.m_r) == TS_CHARACTER) {	
+					if (Type(lisp.m_r) == TS_CHARACTER) {
 						m_bReturn = true;
 						stm->m_char = lisp.m_r;
 						if (AsChar(lisp.m_r) == '\n')
@@ -1143,7 +1143,7 @@ void CLispEng::F_WriteByte() {
 					memset(buf+n, ((buf[n-1]&0x80) ? -1 : 0), count-n);
 
 					int nFull = (sv->m_elementBits+bits)/8;
-					for (int i=0; i<nFull; ++i) {						
+					for (int i=0; i<nFull; ++i) {
 						ts->WriteByte(byte(sv->m_curOctet & ((1 << bits)-1) | (buf[i]<<bits)));
 						sv->m_curOctet = buf[i]>>(8-bits);
 					}
@@ -1187,16 +1187,16 @@ void CLispEng::F_ReadByte() {
 					int count = (sv->m_elementBits+7)/8,
 						fullBytes = sv->m_elementBits/8;
 					byte *buf = (byte*)alloca(count+1);
-					
+
 					int bits = (sv->LinePosRef() * sv->m_elementBits) & 7;
 					int restBits = sv->m_elementBits & 7;
 
-					for (int i=0; i<fullBytes; ++i) {						
+					for (int i=0; i<fullBytes; ++i) {
 						int b = ts->ReadByte();
 						if (b == EOF) {
 							lisp.m_r = S(L_K_EOF);
 							return;
-						}					
+						}
 						buf[i] = byte(sv->m_curOctet & ((1 << bits)-1) | (b << bits));
 						sv->m_curOctet = byte(b >> (8-bits));
 					}
@@ -1215,7 +1215,7 @@ void CLispEng::F_ReadByte() {
 					} else
 						buf[count] = 0;
 					lisp.m_r = lisp.FromCInteger(BigInteger(buf, count+1));
-					sv->LinePosRef()++;					
+					sv->LinePosRef()++;
 				}
 			}
 		}
@@ -1281,7 +1281,7 @@ void CLispEng::F_LineNumber() {
 void CLispEng::F_StreamFaslP() {
 	CP flag = Pop(), stm = Pop();
 	CStreamValue *stmv = ToStream(stm);
-	if (flag != V_U) {		
+	if (flag != V_U) {
 		if (flag)
 			stmv->m_flags |= STREAM_FLAG_FASL;
 		else
@@ -1339,7 +1339,7 @@ int StandardStream::get() {
 					throw;
 			}
 		}
-		Throw(E_FAIL);	
+		Throw(E_FAIL);
 	} else
 		return ReadByte();
 }
@@ -1374,7 +1374,7 @@ int InputStream::get() {
 OutputStream::OutputStream(OStreamImp *os) {
 	Init(os);
 	m_mode |= ios::out;
-	
+
 	Encoding.reset(&Ext::Encoding::Default());
 	if (os && IsInteractive()) {
 		Encoding = nullptr;
@@ -1403,7 +1403,7 @@ void OutputStream::put(String::value_type ch) {
 
 #if UCFG_USE_READLINE
 
-void ReadlineFree(void *p) {	
+void ReadlineFree(void *p) {
 #if !UCFG_WIN32		//!!!L readline5.dll uses other CRT. Memory Leak better than crash
 	free(p);
 #endif
